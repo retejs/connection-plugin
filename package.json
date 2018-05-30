@@ -1,5 +1,5 @@
 {
-  "name": "connection",
+  "name": "rete-connection-plugin",
   "version": "0.1.0",
   "description": "",
   "main": "build/index.js",
