@@ -1,17 +1,18 @@
 {
   "name": "rete-connection-plugin",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "",
-  "main": "build/index.js",
+  "main": "build/connection-plugin.min.js",
   "scripts": {
-    "build": "rollup -c"
+    "build": "rete --build rete.config.js",
+    "build:dev": "rete --build rete.config.js --watch",
+    "prepublishOnly": "npm run build"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {},
   "devDependencies": {
-    "rollup": "^0.59.2",
-    "rollup-plugin-babel": "^3.0.4",
+    "rete-cli": "^0.1.0",
     "rollup-plugin-sass": "^0.6.1"
   }
 }
