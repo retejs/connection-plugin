@@ -2,7 +2,7 @@ import './index.sass'
 import { Picker } from './picker';
 import { renderConnection } from './utils';
 
-export function install(editor, { curvature = 0.4 }) {
+function install(editor, { curvature = 0.4 }) {
     var mousePosition = [0, 0];
     var picker = new Picker(editor)
 
@@ -65,4 +65,8 @@ export function install(editor, { curvature = 0.4 }) {
     editor.on('click', () => { picker.output = null; });
 
     editor.on('renderconnection', arg => renderConnection(arg, curvature));
+}
+
+export default {
+    install
 }
