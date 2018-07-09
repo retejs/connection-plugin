@@ -3,8 +3,6 @@ import Path from "svg-path-generator";
 const renderTypeCurved = 'curved';
 const renderTypeRightAngled = 'right-angled';
 
-const originOffset = 40;
-
 function toTrainCase(str) {
     return str.toLowerCase().replace(/ /g, '-');
 }
