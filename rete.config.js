@@ -7,5 +7,14 @@ export default {
         sass({
             insert: true
         })
+    ],
+    output: {
+        globals: [
+            'Path'
+        ]
+    },
+    external: [
+        'svg-path-generator'
     ]
 }
+
