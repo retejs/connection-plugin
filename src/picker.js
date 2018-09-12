@@ -1,4 +1,4 @@
-import { renderConnection } from './utils';
+import { renderConnection, renderPathData, updateConnection } from './utils';
 
 export class Picker {
 
@@ -16,21 +16,37 @@ export class Picker {
         const { area } = this.editor.view;
 
         this._output = val;
-        if (val !== null)
-            area.appendChild(this.el)
-        else if (this.el.parentElement) {
+        if (val !== null) {
+            area.appendChild(this.el);
+            this.renderConnection();
+        } else if (this.el.parentElement) {
             area.removeChild(this.el)
             this.el.innerHTML = '';
         }
     }
 
-    renderConnection({ x, y }, curvature) {
-        if (!this.output) return;
-    
+    getPoints() {
+        const mouse = this.editor.view.area.mouse;
         const node = this.editor.view.nodes.get(this.output.node);
         const [x1, y1] = node.getSocketPosition(this.output);
-    
-        renderConnection({ el: this.el, x1, y1, x2: x, y2: y, connection: null }, curvature);
+
+        return [x1, y1, mouse.x, mouse.y];
+    }
+
+    updateConnection() {
+        if (!this.output) return;
+
+        const d = renderPathData(this.editor, this.getPoints());
+
+        updateConnection({ el: this.el, d });
+    }
+
+    renderConnection() {
+        if (!this.output) return;
+
+        const d = renderPathData(this.editor, this.getPoints());
+
+        renderConnection({ el: this.el, d, connection: null });
     }
 
 }

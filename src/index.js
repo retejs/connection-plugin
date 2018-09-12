@@ -1,9 +1,10 @@
 import './index.sass'
 import { Picker } from './picker';
-import { renderConnection } from './utils';
+import { defaultPath, renderConnection, renderPathData, updateConnection } from './utils';
 
-function install(editor, { curvature = 0.4 }) {
-    var mousePosition = [0, 0];
+function install(editor) {
+    editor.bind('connectionpath');
+    
     var picker = new Picker(editor)
 
     function pickOutput({ output, node }) {
@@ -18,7 +19,6 @@ function install(editor, { curvature = 0.4 }) {
             if (input.hasConnection()) {
                 picker.output = input.connections[0].output;
                 editor.removeConnection(input.connections[0]);
-                picker.renderConnection(mousePosition, curvature);
             }
             return true;
         }
@@ -60,13 +60,24 @@ function install(editor, { curvature = 0.4 }) {
         el.addEventListener('mousemove', () => (prevent = false));
     });
 
-    editor.on('mousemove', arg => { mousePosition = arg; picker.renderConnection(mousePosition, curvature) });
+    editor.on('mousemove', () => { picker.updateConnection() });
 
     editor.on('click', () => { picker.output = null; });
 
-    editor.on('renderconnection', arg => renderConnection(arg, curvature));
+    editor.on('renderconnection', ({ el, connection, points }) => {
+        const d = renderPathData(editor, points, connection);
+
+        renderConnection({ el, d, connection })
+    });
+
+    editor.on('updateconnection', ({ el, connection, points }) => {
+        const d = renderPathData(editor, points, connection);
+
+        updateConnection({ el, connection, d });
+    });
 }
 
 export default {
-    install
+    install,
+    defaultPath
 }
