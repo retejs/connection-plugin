@@ -38,6 +38,7 @@ export function renderConnection({ el, d, connection }) {
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
 
     svg.classList = `connection ${classed.join(' ')}`;
+    path.classList = 'main-path';
     path.setAttribute('d', d);
 
     svg.appendChild(path);
