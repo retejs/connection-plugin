@@ -1,6 +1,6 @@
 {
   "name": "rete-connection-plugin",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "",
   "main": "build/connection-plugin.min.js",
   "scripts": {
@@ -12,7 +12,7 @@
   "license": "ISC",
   "dependencies": {},
   "devDependencies": {
-    "rete-cli": "^0.1.0",
+    "rete-cli": "^0.2.0",
     "rollup-plugin-sass": "^0.6.1"
   }
 }
