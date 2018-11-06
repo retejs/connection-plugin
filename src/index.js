@@ -62,7 +62,9 @@ function install(editor) {
 
     editor.on('mousemove', () => { picker.updateConnection() });
 
-    editor.on('click', () => { picker.output = null; });
+    editor.view.container.addEventListener('mousedown', () => { 
+        picker.output = null;
+    });
 
     editor.on('renderconnection', ({ el, connection, points }) => {
         const d = renderPathData(editor, points, connection);
