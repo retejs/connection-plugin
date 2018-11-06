@@ -39,6 +39,13 @@ function install(editor) {
         picker.output = null
     }
 
+    function pickConnection(connection) {
+        const { output } = connection;
+
+        editor.removeConnection(connection);
+        picker.output = output;
+    }
+
     editor.on('rendersocket', ({ el, input, output }) => {
 
         var prevent = false;
@@ -73,7 +80,7 @@ function install(editor) {
             e.stopPropagation();
             e.preventDefault();
             
-            pickInput(connection.input)
+            pickConnection(connection)
         });
 
         renderConnection({ el, d, connection })
