@@ -7,14 +7,14 @@ function install(editor) {
     
     var picker = new Picker(editor)
 
-    function pickOutput({ output, node }) {
+    function pickOutput(output) {
         if (output) {
             picker.output = output;
             return;
         }
     }
 
-    function pickInput({ input, node }) {
+    function pickInput(input) {
         if (picker.output === null) {
             if (input.hasConnection()) {
                 picker.output = input.connections[0].output;
@@ -39,7 +39,7 @@ function install(editor) {
         picker.output = null
     }
 
-    editor.on('rendersocket', ({ el, input, output, socket }) => {
+    editor.on('rendersocket', ({ el, input, output }) => {
 
         var prevent = false;
 
@@ -49,9 +49,9 @@ function install(editor) {
             e.preventDefault();
             
             if (input)
-                pickInput({ input, socket })
+                pickInput(input)
             else if (output)
-                pickOutput({ output, socket })
+                pickOutput(output)
         }
 
         el.addEventListener('mousedown', e => (mouseHandle(e), prevent = true));
@@ -68,6 +68,13 @@ function install(editor) {
 
     editor.on('renderconnection', ({ el, connection, points }) => {
         const d = renderPathData(editor, points, connection);
+
+        el.addEventListener('contextmenu', e => {
+            e.stopPropagation();
+            e.preventDefault();
+            
+            pickInput(connection.input)
+        });
 
         renderConnection({ el, d, connection })
     });
