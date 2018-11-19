@@ -8,7 +8,7 @@ function install(editor) {
     var picker = new Picker(editor)
 
     function pickOutput(output) {
-        if (output) {
+        if (output && !picker.output) {
             picker.output = output;
             return;
         }
