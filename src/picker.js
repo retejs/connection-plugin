@@ -35,35 +35,36 @@ export class Picker {
         }
     }
 
+    // eslint-disable-next-line max-statements
     pickInput(input) {
         if (this.output === null) {
             if (input.hasConnection()) {
                 this.output = input.connections[0].output;
-                editor.removeConnection(input.connections[0]);
+                this.editor.removeConnection(input.connections[0]);
             }
             return true;
         }
 
         if (!input.multipleConnections && input.hasConnection())
-            editor.removeConnection(input.connections[0]);
+            this.editor.removeConnection(input.connections[0]);
         
         if (!this.output.multipleConnections && this.output.hasConnection())
-            editor.removeConnection(this.output.connections[0]);
+            this.editor.removeConnection(this.output.connections[0]);
         
         if (this.output.connectedTo(input)) {
             var connection = input.connections.find(c => c.output === this.output);
 
-            editor.removeConnection(connection);
+            this.editor.removeConnection(connection);
         }
 
-        editor.connect(this.output, input);
+        this.editor.connect(this.output, input);
         this.reset();
     }
 
     pickConnection(connection) {
         const { output } = connection;
 
-        editor.removeConnection(connection);
+        this.editor.removeConnection(connection);
         this.output = output;
     }
 
