@@ -1,8 +1,9 @@
 {
   "name": "rete-connection-plugin",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "description": "",
-  "main": "build/connection-plugin.min.js",
+  "main": "build/connection-plugin.common.js",
+  "module": "build/connection-plugin.esm.js",
   "scripts": {
     "build": "rete --build rete.config.js",
     "build:dev": "rete --build rete.config.js --watch",
@@ -12,7 +13,7 @@
   "license": "ISC",
   "dependencies": {},
   "devDependencies": {
-    "rete-cli": "^0.2.0",
+    "rete-cli": "^0.5.0",
     "rollup-plugin-sass": "^0.6.1"
   }
 }
