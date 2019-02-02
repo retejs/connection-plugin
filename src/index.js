@@ -1,77 +1,66 @@
 import './index.sass'
+import { renderConnection, renderPathData, updateConnection } from './utils';
 import { Picker } from './picker';
-import { defaultPath, renderConnection, renderPathData, updateConnection } from './utils';
+
+class Flow {
+    constructor(picker) {
+        this.picker = picker;
+        this.locked = false;
+    }
+
+    act({ input, output } = {}) {
+        if (this.locked) return;
+        
+        if (input)
+            this.picker.pickInput(input)
+        else if (output)
+            this.picker.pickOutput(output)
+        else
+            this.picker.reset();
+    }
+
+    once(params) {
+        this.act(params);
+        this.prevent();
+    }
+
+    prevent() {
+        this.locked = true;
+    }
+
+    reset() {
+        this.locked = false;
+    }
+}
 
 function install(editor) {
     editor.bind('connectionpath');
     
-    var picker = new Picker(editor)
-
-    function pickOutput(output) {
-        if (output && !picker.output) {
-            picker.output = output;
-            return;
-        }
-    }
-
-    function pickInput(input) {
-        if (picker.output === null) {
-            if (input.hasConnection()) {
-                picker.output = input.connections[0].output;
-                editor.removeConnection(input.connections[0]);
-            }
-            return true;
-        }
-
-        if (!input.multipleConnections && input.hasConnection())
-            editor.removeConnection(input.connections[0]);
-        
-        if (!picker.output.multipleConnections && picker.output.hasConnection())
-            editor.removeConnection(picker.output.connections[0]);
-        
-        if (picker.output.connectedTo(input)) {
-            var connection = input.connections.find(c => c.output === picker.output);
-
-            editor.removeConnection(connection);
-        }
-
-        editor.connect(picker.output, input);
-        picker.output = null
-    }
-
-    function pickConnection(connection) {
-        const { output } = connection;
-
-        editor.removeConnection(connection);
-        picker.output = output;
-    }
-
+    const picker = new Picker(editor);
+    const flow = new Flow(picker);
+    
     editor.on('rendersocket', ({ el, input, output }) => {
+        el._reteConnectionPlugin = { input, output };
 
-        var prevent = false;
-
-        function mouseHandle(e) {
-            if (prevent) return;
+        el.addEventListener('pointerdown', e => {
+            editor.view.container.dispatchEvent(new PointerEvent('pointermove', e));
             e.stopPropagation();
-            e.preventDefault();
-            
-            if (input)
-                pickInput(input)
-            else if (output)
-                pickOutput(output)
-        }
-
-        el.addEventListener('mousedown', e => (mouseHandle(e), prevent = true));
-        el.addEventListener('mouseup', mouseHandle);
-        el.addEventListener('click', e => (mouseHandle(e), prevent = false));
-        el.addEventListener('mousemove', () => (prevent = false));
+            flow.once(el._reteConnectionPlugin);
+        });
+        el.addEventListener('click', e => {
+            e.stopPropagation();
+            flow.reset();
+        });
     });
 
-    editor.on('mousemove', () => { picker.updateConnection() });
+    window.addEventListener('pointerup', e => {
+        const el = document.elementFromPoint(e.clientX, e.clientY);
 
-    editor.view.container.addEventListener('mousedown', () => { 
-        picker.output = null;
+        flow.act(el && el._reteConnectionPlugin)
     });
+    window.addEventListener('pointermove', () => flow.reset());
+
+    editor.on('mousemove', () => picker.updateConnection());
 
     editor.on('renderconnection', ({ el, connection, points }) => {
         const d = renderPathData(editor, points, connection);
@@ -80,7 +69,7 @@ function install(editor) {
             e.stopPropagation();
             e.preventDefault();
             
-            pickConnection(connection)
+            picker.pickConnection(connection);
         });
 
         renderConnection({ el, d, connection })
@@ -94,6 +83,7 @@ function install(editor) {
 }
 
 export default {
-    install,
-    defaultPath
+    name: 'connection',
+    install
 }
+export { defaultPath } from './utils';
