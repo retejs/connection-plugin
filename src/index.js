@@ -8,9 +8,10 @@ class Flow {
         this.locked = false;
     }
 
-    act({ input, output } = {}) {
+    act(params) {
         if (this.locked) return;
-        
+        const { input, output } = params || {};
+
         if (input)
             this.picker.pickInput(input)
         else if (output)
