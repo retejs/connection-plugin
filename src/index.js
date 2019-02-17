@@ -5,12 +5,13 @@ import { Picker } from './picker';
 class Flow {
     constructor(picker) {
         this.picker = picker;
-        this.locked = false;
+        this.target = null;
     }
 
     act(params) {
-        if (this.locked) return;
         const { input, output } = params || {};
+
+        if (this.unlock(input || output)) return
 
         if (input)
             this.picker.pickInput(input)
@@ -20,17 +21,17 @@ class Flow {
             this.picker.reset();
     }
 
-    once(params) {
+    once(params, io) {
         this.act(params);
-        this.prevent();
+        this.target = io;
     }
 
-    prevent() {
-        this.locked = true;
-    }
+    unlock(io) {
+        const target = this.target;
 
-    reset() {
-        this.locked = false;
+        this.target = null;
+
+        return target && target === io;
     }
 }
 
@@ -46,11 +47,7 @@ function install(editor) {
         el.addEventListener('pointerdown', e => {
             editor.view.container.dispatchEvent(new PointerEvent('pointermove', e));
             e.stopPropagation();
-            flow.once(el._reteConnectionPlugin);
-        });
-        el.addEventListener('click', e => {
-            e.stopPropagation();
-            flow.reset();
+            flow.once(el._reteConnectionPlugin, input);
         });
     });
 
@@ -59,7 +56,6 @@ function install(editor) {
 
         flow.act(el && el._reteConnectionPlugin)
     });
-    window.addEventListener('pointermove', () => flow.reset());
 
     editor.on('mousemove', () => picker.updateConnection());
 
