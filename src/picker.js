@@ -30,9 +30,9 @@ export class Picker {
     }
 
     pickOutput(output) {
-        if (output && !this.output) {
-            this.output = output;
-        }
+        if (this.output) this.reset();
+        
+        this.output = output;
     }
 
     // eslint-disable-next-line max-statements
