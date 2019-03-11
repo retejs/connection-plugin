@@ -62,13 +62,6 @@ function install(editor) {
     editor.on('renderconnection', ({ el, connection, points }) => {
         const d = renderPathData(editor, points, connection);
 
-        el.addEventListener('contextmenu', e => {
-            e.stopPropagation();
-            e.preventDefault();
-            
-            picker.pickConnection(connection);
-        });
-
         renderConnection({ el, d, connection })
     });
 
