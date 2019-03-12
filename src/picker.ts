@@ -1,14 +1,18 @@
+import { NodeEditor, Input, Output, Connection } from 'rete';
 import { renderConnection, renderPathData, updateConnection } from './utils';
 
 export class Picker {
 
-    constructor(editor) {
+    private el: HTMLElement;
+    private editor: NodeEditor;
+    private _output: Output | null = null;
+
+    constructor(editor: NodeEditor) {
         this.el = document.createElement('div');
         this.editor = editor;
-        this._output = null;
     }
 
-    get output() {
+    get output() : Output | null {
         return this._output;
     }
 
@@ -29,14 +33,14 @@ export class Picker {
         this.output = null;
     }
 
-    pickOutput(output) {
+    pickOutput(output: Output) {
         if (this.output) this.reset();
         
         this.output = output;
     }
 
     // eslint-disable-next-line max-statements
-    pickInput(input) {
+    pickInput(input: Input) {
         if (this.output === null) {
             if (input.hasConnection()) {
                 this.output = input.connections[0].output;
@@ -52,26 +56,34 @@ export class Picker {
             this.editor.removeConnection(this.output.connections[0]);
         
         if (this.output.connectedTo(input)) {
-            var connection = input.connections.find(c => c.output === this.output);
+            let connection = input.connections.find(c => c.output === this.output);
 
-            this.editor.removeConnection(connection);
+            if(connection) {
+                this.editor.removeConnection(connection);
+            }
         }
 
         this.editor.connect(this.output, input);
         this.reset();
     }
 
-    pickConnection(connection) {
+    pickConnection(connection: Connection) {
         const { output } = connection;
 
         this.editor.removeConnection(connection);
         this.output = output;
     }
 
-    getPoints() {
+    private getPoints(output: Output): number[] {
         const mouse = this.editor.view.area.mouse;
-        const node = this.editor.view.nodes.get(this.output.node);
-        const [x1, y1] = node.getSocketPosition(this.output);
+
+        if(!output.node) throw new Error('Node in output not found')
+    
+        const node = this.editor.view.nodes.get(output.node);
+
+        if(!node) throw new Error('Node view not found')
+    
+        const [x1, y1] = node.getSocketPosition(output);
 
         return [x1, y1, mouse.x, mouse.y];
     }
@@ -79,7 +91,7 @@ export class Picker {
     updateConnection() {
         if (!this.output) return;
 
-        const d = renderPathData(this.editor, this.getPoints());
+        const d = renderPathData(this.editor, this.getPoints(this.output));
 
         updateConnection({ el: this.el, d });
     }
@@ -87,9 +99,9 @@ export class Picker {
     renderConnection() {
         if (!this.output) return;
 
-        const d = renderPathData(this.editor, this.getPoints());
+        const d = renderPathData(this.editor, this.getPoints(this.output));
 
-        renderConnection({ el: this.el, d, connection: null });
+        renderConnection({ el: this.el, d });
     }
 
 }

@@ -1,16 +1,24 @@
-import './index.sass'
+import { IO, Input, Output, NodeEditor } from 'rete';
 import { renderConnection, renderPathData, updateConnection } from './utils';
 import { Picker } from './picker';
+import './index.sass';
+
+type FlowParams = { input: Input | null, output: Output | null };
+interface FlowElement extends Element {
+    _reteConnectionPlugin: FlowParams
+};
 
 class Flow {
-    constructor(picker) {
+
+    public picker: Picker;
+    public target: IO | null = null;
+
+    constructor(picker: Picker) {
         this.picker = picker;
         this.target = null;
     }
 
-    act(params) {
-        const { input, output } = params || {};
-
+    act({ input, output }: FlowParams = { input: null, output: null }) {
         if (this.unlock(input || output)) return
 
         if (input)
@@ -21,12 +29,12 @@ class Flow {
             this.picker.reset();
     }
 
-    once(params, io) {
+    once(params: FlowParams, io: IO) {
         this.act(params);
         this.target = io;
     }
 
-    unlock(io) {
+    unlock(io: IO | null) {
         const target = this.target;
 
         this.target = null;
@@ -35,13 +43,13 @@ class Flow {
     }
 }
 
-function install(editor) {
+function install(editor: NodeEditor) {
     editor.bind('connectionpath');
     
     const picker = new Picker(editor);
     const flow = new Flow(picker);
     
-    editor.on('rendersocket', ({ el, input, output }) => {
+    editor.on('rendersocket', ({ el, input, output } : { el: FlowElement, input: Input, output: Output }) => {
         el._reteConnectionPlugin = { input, output };
 
         el.addEventListener('pointerdown', e => {
@@ -54,7 +62,9 @@ function install(editor) {
     window.addEventListener('pointerup', e => {
         const el = document.elementFromPoint(e.clientX, e.clientY);
 
-        flow.act(el && el._reteConnectionPlugin)
+        if(el) {
+            flow.act((el as FlowElement)._reteConnectionPlugin)
+        }
     });
 
     editor.on('mousemove', () => picker.updateConnection());
@@ -68,7 +78,7 @@ function install(editor) {
     editor.on('updateconnection', ({ el, connection, points }) => {
         const d = renderPathData(editor, points, connection);
 
-        updateConnection({ el, connection, d });
+        updateConnection({ el, d });
     });
 }
 
