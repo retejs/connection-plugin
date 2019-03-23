@@ -1,45 +1,21 @@
-import { IO, Input, Output, NodeEditor } from 'rete';
+import { NodeEditor, Connection } from 'rete';
+import { Plugin } from 'rete/types/core/plugin';
 import { renderConnection, renderPathData, updateConnection } from './utils';
 import { Picker } from './picker';
+import { Flow, FlowParams } from './flow';
 import './index.sass';
 
-type FlowParams = { input: Input | null, output: Output | null };
 interface FlowElement extends Element {
     _reteConnectionPlugin: FlowParams
 };
 
-class Flow {
-
-    public picker: Picker;
-    public target: IO | null = null;
-
-    constructor(picker: Picker) {
-        this.picker = picker;
-        this.target = null;
-    }
-
-    act({ input, output }: FlowParams = { input: null, output: null }) {
-        if (this.unlock(input || output)) return
-
-        if (input)
-            this.picker.pickInput(input)
-        else if (output)
-            this.picker.pickOutput(output)
-        else
-            this.picker.reset();
-    }
-
-    once(params: FlowParams, io: IO) {
-        this.act(params);
-        this.target = io;
-    }
-
-    unlock(io: IO | null) {
-        const target = this.target;
-
-        this.target = null;
-
-        return target && target === io;
+declare module 'rete/types/events' {
+    interface EventsTypes {
+        connectionpath: {
+            points: number[],
+            connection: Connection,
+            d: string
+        }
     }
 }
 
@@ -49,13 +25,14 @@ function install(editor: NodeEditor) {
     const picker = new Picker(editor);
     const flow = new Flow(picker);
     
-    editor.on('rendersocket', ({ el, input, output } : { el: FlowElement, input: Input, output: Output }) => {
-        el._reteConnectionPlugin = { input, output };
+    editor.on('rendersocket', ({ el, input, output }) => {
+        const flowEl = el as any as FlowElement;
+        flowEl._reteConnectionPlugin = { input, output };
 
         el.addEventListener('pointerdown', e => {
             editor.view.container.dispatchEvent(new PointerEvent('pointermove', e));
             e.stopPropagation();
-            flow.once(el._reteConnectionPlugin, input);
+            flow.once(flowEl._reteConnectionPlugin, input);
         });
     });
 
@@ -85,5 +62,5 @@ function install(editor: NodeEditor) {
 export default {
     name: 'connection',
     install
-}
+} as Plugin
 export { defaultPath } from './utils';

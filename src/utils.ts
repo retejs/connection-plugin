@@ -1,4 +1,5 @@
 import { Emitter, Connection } from 'rete';
+import { EventsTypes } from 'rete/types/events';
 
 function toTrainCase(str: string) {
     return str.toLowerCase().replace(/ /g, '-');
@@ -12,7 +13,7 @@ export function defaultPath(points: number[], curvature: number) {
     return `M ${x1} ${y1} C ${hx1} ${y1} ${hx2} ${y2} ${x2} ${y2}`;
 }
 
-export function renderPathData(emitter: Emitter, points: number[], connection?: Connection) {
+export function renderPathData(emitter: Emitter<EventsTypes>, points: number[], connection?: Connection) {
     const data = { points, connection, d: '' };
     
     emitter.trigger('connectionpath', data);
