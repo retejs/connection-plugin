@@ -12,8 +12,12 @@
     "lint": "tsc",
     "types": "tsc src/index.ts --target es5 --declaration --outDir ./types --downlevelIteration --emitDeclarationOnly"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Vitaliy Stoliarov",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/retejs/connection-plugin.git"
+  },
   "devDependencies": {
     "rete": "^1.2.0-rc.9",
     "rete-cli": "0.6.0-rc.3",
