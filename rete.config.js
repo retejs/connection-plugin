@@ -7,5 +7,6 @@ export default {
         sass({
             insert: true
         })
-    ]
+    ],
+    globals: { 'rete': 'Rete' }
 }
