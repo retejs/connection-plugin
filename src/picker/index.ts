@@ -3,15 +3,13 @@ import { PickerView } from './view';
 
 export class Picker {
 
-    private el: HTMLElement;
     private editor: NodeEditor;
     private _io: Output | Input | null = null;
     public view: PickerView;
 
     constructor(editor: NodeEditor) {
-        this.el = document.createElement('div');
         this.editor = editor;
-        this.view = new PickerView(this.el, editor, editor.view);
+        this.view = new PickerView(editor, editor.view);
 
         editor.on('mousemove', () => this.io && this.view.updateConnection(this.io));
     }
@@ -21,16 +19,8 @@ export class Picker {
     }
 
     set io(io: Output | Input | null) {
-        const { area } = this.editor.view;
-
         this._io = io;
-        if (io !== null) {
-            area.appendChild(this.el);
-            this.view.renderConnection(io);
-        } else if (this.el.parentElement) {
-            area.removeChild(this.el)
-            this.el.innerHTML = '';
-        }
+        this.view.updatePseudoConnection(io);
     }
 
     reset() {

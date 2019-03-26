@@ -5,11 +5,23 @@ import { renderConnection, renderPathData, updateConnection } from '../utils';
 
 export class PickerView {
 
+    private el: HTMLElement;
+
     constructor(
-        private el: HTMLElement,
         private emitter: Emitter<EventsTypes>,
         private editorView: EditorView
-    ) {}
+    ) {
+        this.el = document.createElement('div');
+        this.editorView.area.appendChild(this.el);
+    }
+
+    updatePseudoConnection(io: Output | Input | null) {
+        if (io !== null) {
+            this.renderConnection(io);
+        } else if (this.el.parentElement) {
+            this.el.innerHTML = '';
+        }
+    }
 
     private getPoints(io: Output | Input): number[] {
         const mouse = this.editorView.area.mouse;
