@@ -5,21 +5,21 @@ export class Picker {
 
     private el: HTMLElement;
     private editor: NodeEditor;
-    private _output: Output | null = null;
+    private _io: Output | Input | null = null;
 
     constructor(editor: NodeEditor) {
         this.el = document.createElement('div');
         this.editor = editor;
     }
 
-    get output() : Output | null {
-        return this._output;
+    get io() : Output | Input | null {
+        return this._io;
     }
 
-    set output(val) {
+    set io(val) {
         const { area } = this.editor.view;
 
-        this._output = val;
+        this._io = val;
         if (val !== null) {
             area.appendChild(this.el);
             this.renderConnection();
@@ -30,21 +30,30 @@ export class Picker {
     }
 
     reset() {
-        this.output = null;
+        this.io = null;
     }
 
     pickOutput(output: Output) {
-        if (this.output) this.reset();
-        
-        this.output = output;
+        if (this.io instanceof Input) {
+            if(!output.multipleConnections && output.hasConnection())
+                this.editor.removeConnection(output.connections[0])
+    
+            this.editor.connect(output, this.io);
+            this.reset();
+            return;
+        }
+
+        if (this.io) this.reset();
+        this.io = output;
     }
 
-    // eslint-disable-next-line max-statements
     pickInput(input: Input) {
-        if (this.output === null) {
+        if (this.io === null) {
             if (input.hasConnection()) {
-                this.output = input.connections[0].output;
+                this.io = input.connections[0].output;
                 this.editor.removeConnection(input.connections[0]);
+            } else {
+                this.io = input;
             }
             return true;
         }
@@ -52,54 +61,58 @@ export class Picker {
         if (!input.multipleConnections && input.hasConnection())
             this.editor.removeConnection(input.connections[0]);
         
-        if (!this.output.multipleConnections && this.output.hasConnection())
-            this.editor.removeConnection(this.output.connections[0]);
+        if (!this.io.multipleConnections && this.io.hasConnection())
+            this.editor.removeConnection(this.io.connections[0]);
         
-        if (this.output.connectedTo(input)) {
-            let connection = input.connections.find(c => c.output === this.output);
+        if (this.io instanceof Output && this.io.connectedTo(input)) {
+            let connection = input.connections.find(c => c.output === this.io);
 
             if(connection) {
                 this.editor.removeConnection(connection);
             }
         }
 
-        this.editor.connect(this.output, input);
-        this.reset();
+        if(this.io instanceof Output) {
+            this.editor.connect(this.io, input);
+            this.reset();
+        }
     }
 
     pickConnection(connection: Connection) {
         const { output } = connection;
 
         this.editor.removeConnection(connection);
-        this.output = output;
+        this.io = output;
     }
 
-    private getPoints(output: Output): number[] {
+    private getPoints(io: Output | Input): number[] {
         const mouse = this.editor.view.area.mouse;
 
-        if(!output.node) throw new Error('Node in output not found')
+        if(!io.node) throw new Error('Node in output/input not found')
     
-        const node = this.editor.view.nodes.get(output.node);
+        const node = this.editor.view.nodes.get(io.node);
 
         if(!node) throw new Error('Node view not found')
     
-        const [x1, y1] = node.getSocketPosition(output);
+        const [x1, y1] = node.getSocketPosition(io);
 
-        return [x1, y1, mouse.x, mouse.y];
+        return io instanceof Output
+            ? [x1, y1, mouse.x, mouse.y]
+            : [mouse.x, mouse.y, x1, y1];
     }
 
     updateConnection() {
-        if (!this.output) return;
+        if (!this.io) return;
 
-        const d = renderPathData(this.editor, this.getPoints(this.output));
+        const d = renderPathData(this.editor, this.getPoints(this.io));
 
         updateConnection({ el: this.el, d });
     }
 
     renderConnection() {
-        if (!this.output) return;
+        if (!this.io) return;
 
-        const d = renderPathData(this.editor, this.getPoints(this.output));
+        const d = renderPathData(this.editor, this.getPoints(this.io));
 
         renderConnection({ el: this.el, d });
     }
