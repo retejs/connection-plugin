@@ -1,28 +1,32 @@
 import { NodeEditor, Input, Output, Connection } from 'rete';
-import { renderConnection, renderPathData, updateConnection } from './utils';
+import { PickerView } from './view';
 
 export class Picker {
 
     private el: HTMLElement;
     private editor: NodeEditor;
     private _io: Output | Input | null = null;
+    public view: PickerView;
 
     constructor(editor: NodeEditor) {
         this.el = document.createElement('div');
         this.editor = editor;
+        this.view = new PickerView(this.el, editor, editor.view);
+
+        editor.on('mousemove', () => this.io && this.view.updateConnection(this.io));
     }
 
     get io() : Output | Input | null {
         return this._io;
     }
 
-    set io(val) {
+    set io(io: Output | Input | null) {
         const { area } = this.editor.view;
 
-        this._io = val;
-        if (val !== null) {
+        this._io = io;
+        if (io !== null) {
             area.appendChild(this.el);
-            this.renderConnection();
+            this.view.renderConnection(io);
         } else if (this.el.parentElement) {
             area.removeChild(this.el)
             this.el.innerHTML = '';
@@ -84,37 +88,4 @@ export class Picker {
         this.editor.removeConnection(connection);
         this.io = output;
     }
-
-    private getPoints(io: Output | Input): number[] {
-        const mouse = this.editor.view.area.mouse;
-
-        if(!io.node) throw new Error('Node in output/input not found')
-    
-        const node = this.editor.view.nodes.get(io.node);
-
-        if(!node) throw new Error('Node view not found')
-    
-        const [x1, y1] = node.getSocketPosition(io);
-
-        return io instanceof Output
-            ? [x1, y1, mouse.x, mouse.y]
-            : [mouse.x, mouse.y, x1, y1];
-    }
-
-    updateConnection() {
-        if (!this.io) return;
-
-        const d = renderPathData(this.editor, this.getPoints(this.io));
-
-        updateConnection({ el: this.el, d });
-    }
-
-    renderConnection() {
-        if (!this.io) return;
-
-        const d = renderPathData(this.editor, this.getPoints(this.io));
-
-        renderConnection({ el: this.el, d });
-    }
-
 }

@@ -44,8 +44,6 @@ function install(editor: NodeEditor) {
         }
     });
 
-    editor.on('mousemove', () => picker.updateConnection());
-
     editor.on('renderconnection', ({ el, connection, points }) => {
         const d = renderPathData(editor, points, connection);
 
