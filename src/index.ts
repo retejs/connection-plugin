@@ -12,15 +12,20 @@ function install(editor: NodeEditor) {
     const picker = new Picker(editor);
     const flow = new Flow(picker);
     
+    function pointerDown(this: HTMLElement, e: PointerEvent) {
+        const { input, output } = (this as any as FlowElement)._reteConnectionPlugin;
+
+        editor.view.container.dispatchEvent(new PointerEvent('pointermove', e));
+        e.stopPropagation();
+        flow.once({ input, output }, input);
+    }
+
     editor.on('rendersocket', ({ el, input, output }) => {
         const flowEl = el as any as FlowElement;
         flowEl._reteConnectionPlugin = { input, output };
 
-        el.addEventListener('pointerdown', e => {
-            editor.view.container.dispatchEvent(new PointerEvent('pointermove', e));
-            e.stopPropagation();
-            flow.once(flowEl._reteConnectionPlugin, input);
-        });
+        el.removeEventListener('pointerdown', pointerDown);
+        el.addEventListener('pointerdown', pointerDown);
     });
 
     window.addEventListener('pointerup', e => {
