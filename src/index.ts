@@ -17,7 +17,7 @@ function install(editor: NodeEditor) {
 
         editor.view.container.dispatchEvent(new PointerEvent('pointermove', e));
         e.stopPropagation();
-        flow.once({ input, output }, input);
+        flow.once({ input, output }, input || output);
     }
 
     editor.on('rendersocket', ({ el, input, output }) => {
