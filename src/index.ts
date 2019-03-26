@@ -1,23 +1,10 @@
-import { NodeEditor, Connection } from 'rete';
+import { NodeEditor } from 'rete';
 import { Plugin } from 'rete/types/core/plugin';
 import { renderConnection, renderPathData, updateConnection } from './utils';
 import { Picker } from './picker';
-import { Flow, FlowParams } from './flow';
+import { Flow } from './flow';
+import { FlowElement } from './types';
 import './index.sass';
-
-interface FlowElement extends Element {
-    _reteConnectionPlugin: FlowParams
-};
-
-declare module 'rete/types/events' {
-    interface EventsTypes {
-        connectionpath: {
-            points: number[],
-            connection: Connection,
-            d: string
-        }
-    }
-}
 
 function install(editor: NodeEditor) {
     editor.bind('connectionpath');
