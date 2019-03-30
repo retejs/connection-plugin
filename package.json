@@ -1,6 +1,6 @@
 {
   "name": "rete-connection-plugin",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "description": "",
   "main": "build/connection-plugin.common.js",
   "module": "build/connection-plugin.esm.js",

@@ -33,8 +33,8 @@ function install(editor: NodeEditor) {
     window.addEventListener('pointerup', e => {
         const flowEl = document.elementFromPoint(e.clientX, e.clientY) as FlowElement;
  
-        if(flow.target) {
-            editor.trigger('connectiondrop', flow.target)
+        if(picker.io) {
+            editor.trigger('connectiondrop', picker.io)
         }
         if(flowEl) {
             flow.act(flowEl._reteConnectionPlugin)
