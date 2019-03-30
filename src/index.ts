@@ -4,10 +4,12 @@ import { renderConnection, renderPathData, updateConnection } from './utils';
 import { Picker } from './picker';
 import { Flow } from './flow';
 import { FlowElement } from './types';
+import './events';
 import './index.sass';
 
 function install(editor: NodeEditor) {
     editor.bind('connectionpath');
+    editor.bind('connectiondrop');
     
     const picker = new Picker(editor);
     const flow = new Flow(picker);
@@ -29,10 +31,13 @@ function install(editor: NodeEditor) {
     });
 
     window.addEventListener('pointerup', e => {
-        const el = document.elementFromPoint(e.clientX, e.clientY);
-
-        if(el) {
-            flow.act((el as FlowElement)._reteConnectionPlugin)
+        const flowEl = document.elementFromPoint(e.clientX, e.clientY) as FlowElement;
+ 
+        if(flow.target) {
+            editor.trigger('connectiondrop', flow.target)
+        }
+        if(flowEl) {
+            flow.act(flowEl._reteConnectionPlugin)
         }
     });
 
