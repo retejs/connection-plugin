@@ -4,6 +4,7 @@
   "description": "",
   "main": "build/connection-plugin.common.js",
   "module": "build/connection-plugin.esm.js",
+  "types": "types/index.d.ts",
   "scripts": {
     "build": "rete --build rete.config.js",
     "build:dev": "rete --build rete.config.js --watch",
