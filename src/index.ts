@@ -1,5 +1,4 @@
 import { NodeEditor } from 'rete';
-import { Plugin } from 'rete/types/core/plugin';
 import { renderConnection, renderPathData, updateConnection } from './utils';
 import { Picker } from './picker';
 import { Flow } from './flow';
@@ -57,5 +56,5 @@ function install(editor: NodeEditor) {
 export default {
     name: 'connection',
     install
-} as Plugin
+}
 export { defaultPath } from './utils';
