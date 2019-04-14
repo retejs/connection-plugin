@@ -1,6 +1,6 @@
 {
   "name": "rete-connection-plugin",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "",
   "main": "build/connection-plugin.common.js",
   "module": "build/connection-plugin.esm.js",
@@ -20,8 +20,9 @@
     "url": "https://github.com/retejs/connection-plugin.git"
   },
   "devDependencies": {
+    "@babel/preset-typescript": "^7.3.3",
     "rete": "^1.2.0-rc.9",
-    "rete-cli": "0.6.0-rc.3",
+    "rete-cli": "0.6.0-rc.5",
     "rollup-plugin-sass": "^0.6.1",
     "ts-node": "^8.0.2",
     "typescript": "^3.3.3333"

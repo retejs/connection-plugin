@@ -8,5 +8,9 @@ export default {
             insert: true
         })
     ],
+    babelPresets: [
+        require('@babel/preset-typescript')
+    ],
+    extensions: ['.js', '.ts'],
     globals: { 'rete': 'Rete' }
 }
