@@ -21,15 +21,7 @@ function install(editor: NodeEditor) {
         flow.once({ input, output }, input || output);
     }
 
-    editor.on('rendersocket', ({ el, input, output }) => {
-        const flowEl = el as any as FlowElement;
-        flowEl._reteConnectionPlugin = { input, output };
-
-        el.removeEventListener('pointerdown', pointerDown);
-        el.addEventListener('pointerdown', pointerDown);
-    });
-
-    window.addEventListener('pointerup', e => {
+    function pointerUp(this: Window, e: PointerEvent) {
         const flowEl = document.elementFromPoint(e.clientX, e.clientY) as FlowElement;
  
         if(picker.io) {
@@ -38,7 +30,18 @@ function install(editor: NodeEditor) {
         if(flowEl) {
             flow.act(flowEl._reteConnectionPlugin)
         }
+    }
+
+
+    editor.on('rendersocket', ({ el, input, output }) => {
+        const flowEl = el as any as FlowElement;
+        flowEl._reteConnectionPlugin = { input, output };
+
+        el.removeEventListener('pointerdown', pointerDown);
+        el.addEventListener('pointerdown', pointerDown);
     });
+
+    window.addEventListener('pointerup', pointerUp);
 
     editor.on('renderconnection', ({ el, connection, points }) => {
         const d = renderPathData(editor, points, connection);
@@ -50,6 +53,10 @@ function install(editor: NodeEditor) {
         const d = renderPathData(editor, points, connection);
 
         updateConnection({ el, d });
+    });
+
+    editor.on('destroy', () => {
+        window.removeEventListener('pointerup', pointerUp);
     });
 }
 
