@@ -9,6 +9,7 @@ import './index.sass';
 function install(editor: NodeEditor) {
     editor.bind('connectionpath');
     editor.bind('connectiondrop');
+    editor.bind('connectionpick');
     
     const picker = new Picker(editor);
     const flow = new Flow(picker);

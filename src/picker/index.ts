@@ -28,6 +28,8 @@ export class Picker {
     }
 
     pickOutput(output: Output) {
+        if (!this.editor.trigger('connectionpick', output)) return;
+        
         if (this.io instanceof Input) {
             if(!output.multipleConnections && output.hasConnection())
                 this.editor.removeConnection(output.connections[0])
@@ -42,6 +44,8 @@ export class Picker {
     }
 
     pickInput(input: Input) {
+        if (!this.editor.trigger('connectionpick', input)) return;
+
         if (this.io === null) {
             if (input.hasConnection()) {
                 this.io = input.connections[0].output;

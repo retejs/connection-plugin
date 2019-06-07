@@ -8,5 +8,6 @@ declare module 'rete/types/events' {
             d: string
         },
         connectiondrop: Input | Output
+        connectionpick: Input | Output
     }
 }
