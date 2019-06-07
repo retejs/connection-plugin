@@ -14,11 +14,15 @@ function install(editor: NodeEditor) {
     const flow = new Flow(picker);
     
     function pointerDown(this: HTMLElement, e: PointerEvent) {
-        const { input, output } = (this as any as FlowElement)._reteConnectionPlugin;
+        const flowEl = (this as any as FlowElement)._reteConnectionPlugin;
 
-        editor.view.container.dispatchEvent(new PointerEvent('pointermove', e));
-        e.stopPropagation();
-        flow.once({ input, output }, input || output);
+        if(flowEl) {
+            const { input, output } = flowEl;
+            
+            editor.view.container.dispatchEvent(new PointerEvent('pointermove', e));
+            e.stopPropagation();
+            flow.once({ input, output }, input || output);
+        }
     }
 
     function pointerUp(this: Window, e: PointerEvent) {
