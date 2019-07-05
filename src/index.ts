@@ -27,8 +27,9 @@ function install(editor: NodeEditor) {
     }
 
     function pointerUp(this: Window, e: PointerEvent) {
+        if(!flow.hasTarget()) return; // don't handle pointerup if the target isn't set for this editor instance
         const flowEl = document.elementFromPoint(e.clientX, e.clientY) as FlowElement;
- 
+
         if(picker.io) {
             editor.trigger('connectiondrop', picker.io)
         }
