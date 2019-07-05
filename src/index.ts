@@ -22,7 +22,7 @@ function install(editor: NodeEditor) {
             
             editor.view.container.dispatchEvent(new PointerEvent('pointermove', e));
             e.stopPropagation();
-            flow.once({ input, output }, input || output);
+            flow.start({ input, output }, input || output);
         }
     }
 
@@ -33,7 +33,7 @@ function install(editor: NodeEditor) {
             editor.trigger('connectiondrop', picker.io)
         }
         if(flowEl) {
-            flow.act(flowEl._reteConnectionPlugin)
+            flow.complete(flowEl._reteConnectionPlugin)
         }
     }
 
