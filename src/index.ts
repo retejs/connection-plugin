@@ -21,6 +21,7 @@ function install(editor: NodeEditor) {
             const { input, output } = flowEl;
             
             editor.view.container.dispatchEvent(new PointerEvent('pointermove', e));
+            e.preventDefault();
             e.stopPropagation();
             flow.start({ input, output }, input || output);
         }
