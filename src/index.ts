@@ -2,7 +2,6 @@ import { NodeEditor } from 'rete';
 import { renderConnection, renderPathData, updateConnection } from './utils';
 import { Picker } from './picker';
 import { Flow } from './flow';
-import { FlowElement } from './types';
 import './events';
 import './index.sass';
 
@@ -13,12 +12,13 @@ function install(editor: NodeEditor) {
     
     const picker = new Picker(editor);
     const flow = new Flow(picker);
+    const socketsParams = new WeakMap();
     
     function pointerDown(this: HTMLElement, e: PointerEvent) {
-        const flowEl = (this as any as FlowElement)._reteConnectionPlugin;
+        const flowParams = socketsParams.get(this);
 
-        if(flowEl) {
-            const { input, output } = flowEl;
+        if(flowParams) {
+            const { input, output } = flowParams;
             
             editor.view.container.dispatchEvent(new PointerEvent('pointermove', e));
             e.preventDefault();
@@ -28,21 +28,19 @@ function install(editor: NodeEditor) {
     }
 
     function pointerUp(this: Window, e: PointerEvent) {
-        if(!flow.hasTarget()) return; // don't handle pointerup if the target isn't set for this editor instance
-        const flowEl = document.elementFromPoint(e.clientX, e.clientY) as FlowElement;
+        const flowEl = document.elementFromPoint(e.clientX, e.clientY);
 
         if(picker.io) {
             editor.trigger('connectiondrop', picker.io)
         }
         if(flowEl) {
-            flow.complete(flowEl._reteConnectionPlugin)
+            flow.complete(socketsParams.get(flowEl) || {})
         }
     }
 
 
     editor.on('rendersocket', ({ el, input, output }) => {
-        const flowEl = el as any as FlowElement;
-        flowEl._reteConnectionPlugin = { input, output };
+        socketsParams.set(el, { input, output });
 
         el.removeEventListener('pointerdown', pointerDown);
         el.addEventListener('pointerdown', pointerDown);
