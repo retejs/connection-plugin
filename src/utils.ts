@@ -5,6 +5,10 @@ function toTrainCase(str: string) {
     return str.toLowerCase().replace(/ /g, '-');
 }
 
+export function getMapItemRecursively<T extends any>(map: WeakMap<Element, T>, el: Element): T | null {
+    return map.get(el) || (el.parentElement ? getMapItemRecursively(map, el.parentElement) : null);
+}
+
 export function defaultPath(points: number[], curvature: number) {
     const [x1, y1, x2, y2] = points;
     const hx1 = x1 + Math.abs(x2 - x1) * curvature;

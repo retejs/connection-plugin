@@ -1,7 +1,7 @@
 import { NodeEditor } from 'rete';
-import { renderConnection, renderPathData, updateConnection } from './utils';
+import { renderConnection, renderPathData, updateConnection, getMapItemRecursively } from './utils';
 import { Picker } from './picker';
-import { Flow } from './flow';
+import { Flow, FlowParams } from './flow';
 import './events';
 import './index.sass';
 
@@ -12,7 +12,7 @@ function install(editor: NodeEditor) {
     
     const picker = new Picker(editor);
     const flow = new Flow(picker);
-    const socketsParams = new WeakMap();
+    const socketsParams = new WeakMap<Element, FlowParams>();
     
     function pointerDown(this: HTMLElement, e: PointerEvent) {
         const flowParams = socketsParams.get(this);
@@ -34,7 +34,7 @@ function install(editor: NodeEditor) {
             editor.trigger('connectiondrop', picker.io)
         }
         if(flowEl) {
-            flow.complete(socketsParams.get(flowEl) || {})
+            flow.complete(getMapItemRecursively(socketsParams, flowEl) || {})
         }
     }
 
