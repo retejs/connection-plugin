@@ -37,4 +37,6 @@ editor.on('connectionpick', io /* Input or Output */ => {
     // you can prevent it
     return false;
 });
+
+editor.trigger('resetconnection'); // reset pseudo connection
 ```

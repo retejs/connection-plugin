@@ -9,6 +9,7 @@ function install(editor: NodeEditor) {
     editor.bind('connectionpath');
     editor.bind('connectiondrop');
     editor.bind('connectionpick');
+    editor.bind('resetconnection');
     
     const picker = new Picker(editor);
     const flow = new Flow(picker);
@@ -38,6 +39,7 @@ function install(editor: NodeEditor) {
         }
     }
 
+    editor.on('resetconnection', () => flow.complete());
 
     editor.on('rendersocket', ({ el, input, output }) => {
         socketsParams.set(el, { input, output });
