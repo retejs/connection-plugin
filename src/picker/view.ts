@@ -1,5 +1,5 @@
 import { Output, Input, Emitter } from 'rete';
-import { EditorView } from "rete/types/view";
+import { EditorView } from 'rete/types/view';
 import { EventsTypes } from 'rete/types/events';
 import { renderConnection, renderPathData, updateConnection } from '../utils';
 
