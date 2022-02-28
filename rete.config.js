@@ -1,3 +1,4 @@
+import typescript from '@rollup/plugin-typescript';
 import sass from 'rollup-plugin-sass';
 
 export default {
@@ -6,7 +7,8 @@ export default {
     plugins: [
         sass({
             insert: true
-        })
+        }),
+        typescript()
     ],
     babelPresets: [
         require('@babel/preset-typescript')
