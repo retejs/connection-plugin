@@ -16,7 +16,7 @@ Events
 ```js
 editor.on('connectionpath', data => {
     const {
-        points // array of numbers, e.g. [x1, y1, x2, y2]
+        points, // array of numbers, e.g. [x1, y1, x2, y2]
         connection, // Rete.Connection instance
         d // string, d attribute of <path>
     } = data;
