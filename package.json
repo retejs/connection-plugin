@@ -6,12 +6,11 @@
   "module": "build/connection-plugin.esm.js",
   "types": "types/index.d.ts",
   "scripts": {
-    "build": "rete --build rete.config.js",
-    "build:dev": "rete --build rete.config.js --watch",
+    "build": "rete build -c rete.config.ts",
+    "build:dev": "rete build -c rete.config.ts --watch",
+    "build:inject": "rete build -c rete.config.ts --watch --output ../playground/node_modules/rete-connection-plugin",
     "prepublishOnly": "npm run build",
-    "prebuild": "npm run lint && npm run types",
-    "lint": "tsc",
-    "types": "tsc src/index.ts --target es5 --declaration --outDir ./types --downlevelIteration --emitDeclarationOnly"
+    "lint": "rete lint"
   },
   "author": "Vitaliy Stoliarov",
   "license": "MIT",
@@ -19,12 +18,13 @@
     "type": "git",
     "url": "https://github.com/retejs/connection-plugin.git"
   },
+  "peerDependencies": {
+    "rete": "file:../rete/rete-2.0.0-beta.1.tgz"
+  },
   "devDependencies": {
-    "@babel/preset-typescript": "^7.3.3",
-    "rete": "^1.3.0",
-    "rete-cli": "^0.6.0",
+    "rete-cli": "^1.0.0-beta.8",
     "rollup-plugin-sass": "^0.6.1",
     "ts-node": "^8.0.2",
-    "typescript": "^3.3.3333"
+    "typescript": "4.8.4"
   }
 }

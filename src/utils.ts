@@ -1,55 +1,55 @@
-import { Emitter, Connection } from 'rete';
-import { EventsTypes } from 'rete/types/events';
+// import { Emitter, Connection } from 'rete';
+// import { EventsTypes } from 'rete/types/events';
 
-function toTrainCase(str: string) {
-    return str.toLowerCase().replace(/ /g, '-');
-}
+// function toTrainCase(str: string) {
+//     return str.toLowerCase().replace(/ /g, '-');
+// }
 
-export function getMapItemRecursively<T extends any>(map: WeakMap<Element, T>, el: Element): T | null {
-    return map.get(el) || (el.parentElement ? getMapItemRecursively(map, el.parentElement) : null);
-}
+// export function getMapItemRecursively<T>(map: WeakMap<Element, T>, el: Element): T | null {
+//     return map.get(el) || (el.parentElement ? getMapItemRecursively(map, el.parentElement) : null);
+// }
 
-export function defaultPath(points: number[], curvature: number) {
-    const [x1, y1, x2, y2] = points;
-    const hx1 = x1 + Math.abs(x2 - x1) * curvature;
-    const hx2 = x2 - Math.abs(x2 - x1) * curvature;
+// export function defaultPath(points: number[], curvature: number) {
+//     const [x1, y1, x2, y2] = points;
+//     const hx1 = x1 + Math.abs(x2 - x1) * curvature;
+//     const hx2 = x2 - Math.abs(x2 - x1) * curvature;
 
-    return `M ${x1} ${y1} C ${hx1} ${y1} ${hx2} ${y2} ${x2} ${y2}`;
-}
+//     return `M ${x1} ${y1} C ${hx1} ${y1} ${hx2} ${y2} ${x2} ${y2}`;
+// }
 
-export function renderPathData(emitter: Emitter<EventsTypes>, points: number[], connection?: Connection) {
-    const data = { points, connection, d: '' };
-    
-    emitter.trigger('connectionpath', data);
-    
-    return data.d || defaultPath(points, 0.4);
-}
+// export function renderPathData(emitter: Emitter<EventsTypes>, points: number[], connection?: Connection) {
+//     const data = { points, connection, d: '' };
 
-export function updateConnection({ el, d } : { el: HTMLElement, d: string }) {
-    const path = el.querySelector('.connection path');
+//     emitter.trigger('connectionpath', data);
 
-    if (!path) throw new Error('Path of connection was broken');
+//     return data.d || defaultPath(points, 0.4);
+// }
 
-    path.setAttribute('d', d);
-}
+// export function updateConnection({ el, d } : { el: HTMLElement, d: string }) {
+//     const path = el.querySelector('.connection path');
 
-export function renderConnection({ el, d, connection } : { el: HTMLElement, d: string, connection?: Connection }) {
-    const classed = !connection?[]:[
-        'input-' + toTrainCase(connection.input.name),
-        'output-' + toTrainCase(connection.output.name),
-        'socket-input-' + toTrainCase(connection.input.socket.name),
-        'socket-output-' + toTrainCase(connection.output.socket.name)
-    ];
+//     if (!path) throw new Error('Path of connection was broken');
 
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+//     path.setAttribute('d', d);
+// }
 
-    svg.classList.add('connection', ...classed);
-    path.classList.add('main-path');
-    path.setAttribute('d', d);
+// export function renderConnection({ el, d, connection } : { el: HTMLElement, d: string, connection?: Connection }) {
+//     const classed = !connection?[]:[
+//         'input-' + toTrainCase(connection.input.name),
+//         'output-' + toTrainCase(connection.output.name),
+//         'socket-input-' + toTrainCase(connection.input.socket.name),
+//         'socket-output-' + toTrainCase(connection.output.socket.name)
+//     ];
 
-    svg.appendChild(path);
-    el.appendChild(svg);
+//     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+//     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
 
-    updateConnection({ el, d });
-}
+//     svg.classList.add('connection', ...classed);
+//     path.classList.add('main-path');
+//     path.setAttribute('d', d);
+
+//     svg.appendChild(path);
+//     el.appendChild(svg);
+
+//     updateConnection({ el, d });
+// }

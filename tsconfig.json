@@ -1,7 +1,6 @@
 {
-    "extends": "rete-cli/tsconfig.json",
     "compilerOptions": {
-        "target": "es5"
+        "strict": true
     },
     "include": ["src"]
 }

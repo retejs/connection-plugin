@@ -1,74 +1,76 @@
-import { NodeEditor } from 'rete';
-import { renderConnection, renderPathData, updateConnection, getMapItemRecursively } from './utils';
-import { Picker } from './picker';
-import { Flow, FlowParams } from './flow';
-import './events';
-import './index.sass';
+export * from './next'
 
-function install(editor: NodeEditor) {
-    editor.bind('connectionpath');
-    editor.bind('connectiondrop');
-    editor.bind('connectionpick');
-    editor.bind('resetconnection');
-    
-    const picker = new Picker(editor);
-    const flow = new Flow(picker);
-    const socketsParams = new WeakMap<Element, FlowParams>();
-    
-    function pointerDown(this: HTMLElement, e: PointerEvent) {
-        const flowParams = socketsParams.get(this);
+// import { NodeEditor } from 'rete';
+// import { renderConnection, renderPathData, updateConnection, getMapItemRecursively } from './utils';
+// import { Picker } from './picker';
+// import { Flow, FlowParams } from './flow';
+// import './events';
+// import './index.sass';
 
-        if(flowParams) {
-            const { input, output } = flowParams;
-            
-            editor.view.container.dispatchEvent(new PointerEvent('pointermove', e));
-            e.preventDefault();
-            e.stopPropagation();
-            flow.start({ input, output }, input || output);
-        }
-    }
+// function install(editor: NodeEditor) {
+//     editor.bind('connectionpath');
+//     editor.bind('connectiondrop');
+//     editor.bind('connectionpick');
+//     editor.bind('resetconnection');
 
-    function pointerUp(this: Window, e: PointerEvent) {
-        const flowEl = document.elementFromPoint(e.clientX, e.clientY);
+//     const picker = new Picker(editor);
+//     const flow = new Flow(picker);
+//     const socketsParams = new WeakMap<Element, FlowParams>();
 
-        if(picker.io) {
-            editor.trigger('connectiondrop', picker.io)
-        }
-        if(flowEl) {
-            flow.complete(getMapItemRecursively(socketsParams, flowEl) || {})
-        }
-    }
+//     function pointerDown(this: HTMLElement, e: PointerEvent) {
+//         const flowParams = socketsParams.get(this);
 
-    editor.on('resetconnection', () => flow.complete());
+//         if(flowParams) {
+//             const { input, output } = flowParams;
 
-    editor.on('rendersocket', ({ el, input, output }) => {
-        socketsParams.set(el, { input, output });
+//             editor.view.container.dispatchEvent(new PointerEvent('pointermove', e));
+//             e.preventDefault();
+//             e.stopPropagation();
+//             flow.start({ input, output }, input || output);
+//         }
+//     }
 
-        el.removeEventListener('pointerdown', pointerDown);
-        el.addEventListener('pointerdown', pointerDown);
-    });
+//     function pointerUp(this: Window, e: PointerEvent) {
+//         const flowEl = document.elementFromPoint(e.clientX, e.clientY);
 
-    window.addEventListener('pointerup', pointerUp);
+//         if(picker.io) {
+//             editor.trigger('connectiondrop', picker.io)
+//         }
+//         if(flowEl) {
+//             flow.complete(getMapItemRecursively(socketsParams, flowEl) || {})
+//         }
+//     }
 
-    editor.on('renderconnection', ({ el, connection, points }) => {
-        const d = renderPathData(editor, points, connection);
+//     editor.on('resetconnection', () => flow.complete());
 
-        renderConnection({ el, d, connection })
-    });
+//     editor.on('rendersocket', ({ el, input, output }) => {
+//         socketsParams.set(el, { input, output });
 
-    editor.on('updateconnection', ({ el, connection, points }) => {
-        const d = renderPathData(editor, points, connection);
+//         el.removeEventListener('pointerdown', pointerDown);
+//         el.addEventListener('pointerdown', pointerDown);
+//     });
 
-        updateConnection({ el, d });
-    });
+//     window.addEventListener('pointerup', pointerUp);
 
-    editor.on('destroy', () => {
-        window.removeEventListener('pointerup', pointerUp);
-    });
-}
+//     editor.on('renderconnection', ({ el, connection, points }) => {
+//         const d = renderPathData(editor, points, connection);
 
-export default {
-    name: 'connection',
-    install
-}
-export { defaultPath } from './utils';
+//         renderConnection({ el, d, connection })
+//     });
+
+//     editor.on('updateconnection', ({ el, connection, points }) => {
+//         const d = renderPathData(editor, points, connection);
+
+//         updateConnection({ el, d });
+//     });
+
+//     editor.on('destroy', () => {
+//         window.removeEventListener('pointerup', pointerUp);
+//     });
+// }
+
+// export default {
+//     name: 'connection',
+//     install
+// }
+// export { defaultPath } from './utils';
