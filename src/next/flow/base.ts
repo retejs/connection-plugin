@@ -8,9 +8,10 @@ export type Context<Schemes extends BaseSchemes, K extends any[]> = {
     socketsCache: Map<Element, SocketData>
 }
 export type EventType = 'up' | 'down'
+export type PickParams = { socket: SocketData, event: EventType }
 
 export abstract class Flow<Schemes extends BaseSchemes, K extends any[]> {
-    public abstract pick(socket: SocketData, event: EventType, context: Context<Schemes, K>): void
+    public abstract pick(params: PickParams, context: Context<Schemes, K>): void
     public abstract getPickedSocket(): SocketData | undefined
     public abstract drop(context: Context<Schemes, K>): void
 }

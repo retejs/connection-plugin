@@ -1,82 +1,110 @@
-import { getUID } from 'rete'
-
 import { ClassicScheme, SocketData } from '../../types'
-import { Context, EventType, Flow } from '../base'
+import { Context, Flow, PickParams } from '../base'
+import { makeConnection, State, StateContext } from '../utils'
 
-export class ClassicFlow<Schemes extends ClassicScheme, K extends any[]> implements Flow<Schemes, K> {
-    private initial: SocketData | undefined
-    private currentlyPickedConnection?: ClassicScheme['Connection']
+class Picked extends State<ClassicScheme, any[]> {
 
-    private createConnection(source: SocketData, target: SocketData, context: Context<Schemes, K>) {
-        context.editor.addConnection({
-            id: getUID(),
-            source: source.nodeId,
-            sourceOutput: source.key,
-            target: target.nodeId,
-            targetInput: target.key
-        })
+    constructor(public initial: SocketData) {
+        super()
     }
 
-    private makeConnection(initial: SocketData, socket: SocketData, context: Context<Schemes, K>) {
-        const forward = initial.side === 'output' && socket.side === 'input'
-        const backward = initial.side === 'input' && socket.side === 'output'
-        const [source, target] = forward
-            ? [this.initial, socket]
-            : (backward ? [socket, initial] : [])
-
-        if (source && target) {
-            this.createConnection(source, target, context)
+    pick({ socket }: PickParams, context: Context<ClassicScheme, any[]>): void {
+        if (makeConnection(this.initial, socket, context)) {
             this.drop(context)
         }
     }
 
-    // eslint-disable-next-line max-statements
-    public pick(socket: SocketData, event: EventType, context: Context<Schemes, K>) {
-        if (this.initial && (!this.currentlyPickedConnection || !(socket.side === 'input' && this.currentlyPickedConnection.target === socket.nodeId && this.currentlyPickedConnection.targetInput === socket.key))) {
-            this.makeConnection(this.initial, socket, context)
+    drop(context: Context<ClassicScheme, any[]>): void {
+        if (this.initial) {
+            context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial } })
+        }
+        this.context.switchTo(new Idle())
+    }
+}
+
+class PickedExisting extends State<ClassicScheme, any[]> {
+
+    constructor(public connection: ClassicScheme['Connection'], context: Context<ClassicScheme, any[]>) {
+        super()
+        const outputSocket = Array.from(context.socketsCache.values()).find(data => {
+            return data.nodeId === this.connection.source
+                && data.side === 'output'
+                && data.key === this.connection.sourceOutput
+        })
+
+        if (!outputSocket) throw new Error('cannot find output socket')
+
+        context.editor.removeConnection(this.connection.id)
+        this.initial = outputSocket
+    }
+
+    pick({ socket, event }: PickParams, context: Context<ClassicScheme, any[]>): void {
+        if (this.initial && !(socket.side === 'input' && this.connection.target === socket.nodeId && this.connection.targetInput === socket.key)) {
+            if (makeConnection(this.initial, socket, context)) {
+                this.drop(context)
+            }
         } else if (event === 'down') {
-            if (socket.side === 'input') {
-                const connection = context
-                    .editor.getConnections()
-                    .find(item => item.target === socket.nodeId && item.targetInput === socket.key)
-
-                if (this.currentlyPickedConnection && this.initial) {
-                    this.makeConnection(this.initial, socket, context)
-                    this.drop(context)
-                } else if (connection) {
-                    this.currentlyPickedConnection = connection
-                    const outputSocket = Array.from(context.socketsCache.values()).find(data => {
-                        return data.nodeId === connection.source && data.side === 'output' && data.key === connection.sourceOutput
-                    })
-
-                    if (!outputSocket) throw new Error('cannot find output socket')
-
-                    context.editor.removeConnection(connection.id)
-                    this.initial = outputSocket
-                } else {
-                    this.initial = socket
-                }
-            } else {
-                this.initial = socket
+            if (this.initial) {
+                makeConnection(this.initial, socket, context)
+                this.drop(context)
             }
         }
     }
 
-    public async restoreConnection(context: Context<Schemes, K>) {
-        if (this.currentlyPickedConnection) {
-            await context.editor.addConnection(this.currentlyPickedConnection)
-        }
-    }
-
-    public getPickedSocket() {
-        return this.initial
-    }
-
-    public drop(context: Context<Schemes, K>) {
+    drop(context: Context<ClassicScheme, any[]>): void {
         if (this.initial) {
             context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial } })
         }
-        delete this.currentlyPickedConnection
+        this.context.switchTo(new Idle())
+    }
+}
+
+class Idle extends State<ClassicScheme, any[]> {
+    pick({ socket, event }: PickParams, context: Context<ClassicScheme, any[]>): void {
+        if (event !== 'down') return
+        if (socket.side === 'input') {
+            const connection = context
+                .editor.getConnections()
+                .find(item => item.target === socket.nodeId && item.targetInput === socket.key)
+
+            if (connection) {
+                this.context.switchTo(new PickedExisting(connection, context))
+                return
+            }
+        }
+
+        this.context.switchTo(new Picked(socket))
+    }
+
+    drop(context: Context<ClassicScheme, any[]>): void {
+        if (this.initial) {
+            context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial } })
+        }
         delete this.initial
+    }
+}
+
+export class ClassicFlow<Schemes extends ClassicScheme, K extends any[]> implements StateContext<Schemes, K>, Flow<Schemes, K> {
+    currentState!: State<Schemes, K>
+
+    constructor() {
+        this.switchTo(new Idle())
+    }
+
+    public pick(params: PickParams, context: Context<Schemes, K>) {
+        this.currentState.pick(params, context)
+    }
+
+    public getPickedSocket() {
+        return this.currentState.initial
+    }
+
+    public switchTo(state: State<Schemes, K>): void {
+        state.setContext(this)
+        this.currentState = state
+    }
+
+    public drop(context: Context<Schemes, K>) {
+        this.currentState.drop(context)
     }
 }

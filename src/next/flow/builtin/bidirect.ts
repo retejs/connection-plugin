@@ -1,54 +1,68 @@
-import { getUID } from 'rete'
-
 import { ClassicScheme, SocketData } from '../../types'
-import { Context, EventType, Flow } from '../base'
+import { Context, Flow, PickParams } from '../base'
+import { makeConnection, State, StateContext } from '../utils'
 
-export class BidirectFlow<Schemes extends ClassicScheme, K extends any[]> implements Flow<Schemes, K> {
-    private initial: SocketData | undefined
-
-    constructor(private props?: { pickByClick?: boolean }) { }
-
-    private createConnection(source: SocketData, target: SocketData, context: Context<Schemes, K>) {
-        context.editor.addConnection({
-            id: getUID(),
-            source: source.nodeId,
-            sourceOutput: source.key,
-            target: target.nodeId,
-            targetInput: target.key
-        })
+class Picked extends State<ClassicScheme, any[]> {
+    constructor(public initial: SocketData, private pickByClick: boolean) {
+        super()
     }
 
-    private isSame(a: SocketData, b: SocketData) {
-        return a.key === b.key && a.nodeId === b.nodeId && a.side === b.side
-    }
-
-    public pick(socket: SocketData, event: EventType, context: Context<Schemes, K>) {
-        if (!this.props?.pickByClick && this.initial && this.isSame(this.initial, socket)) {
+    pick({ socket }: PickParams, context: Context<ClassicScheme, any[]>): void {
+        if (makeConnection(this.initial, socket, context)) {
             this.drop(context)
-        } else if (this.initial) {
-            const forward = this.initial.side === 'output' && socket.side === 'input'
-            const backward = this.initial.side === 'input' && socket.side === 'output'
-            const [source, target] = forward
-                ? [this.initial, socket]
-                : (backward ? [socket, this.initial] : [])
-
-            if (source && target) {
-                this.createConnection(source, target, context)
-                this.drop(context)
-            }
-        } else if (event === 'down') {
-            this.initial = socket
+        } else if (!this.pickByClick) {
+            this.drop(context)
         }
+    }
+
+    drop(context: Context<ClassicScheme, any[]>): void {
+        if (this.initial) {
+            context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial } })
+        }
+        this.context.switchTo(new Idle(this.pickByClick))
+    }
+}
+
+class Idle extends State<ClassicScheme, any[]> {
+    constructor(private pickByClick: boolean) {
+        super()
+    }
+
+    pick({ socket, event }: PickParams): void {
+        if (event === 'down') {
+            this.context.switchTo(new Picked(socket, this.pickByClick))
+        }
+    }
+
+    drop(context: Context<ClassicScheme, any[]>): void {
+        if (this.initial) {
+            context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial } })
+        }
+        delete this.initial
+    }
+}
+
+export class BidirectFlow<Schemes extends ClassicScheme, K extends any[]> implements StateContext<Schemes, K>, Flow<Schemes, K> {
+    currentState!: State<Schemes, K>
+
+    constructor(props?: { pickByClick?: boolean }) {
+        this.switchTo(new Idle(Boolean(props?.pickByClick)))
+    }
+
+    public pick(params: PickParams, context: Context<Schemes, K>) {
+        this.currentState.pick(params, context)
     }
 
     public getPickedSocket() {
-        return this.initial
+        return this.currentState.initial
     }
 
     public drop(context: Context<Schemes, K>) {
-        if (this.initial) {
-            context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial } })
-            delete this.initial
-        }
+        this.currentState.drop(context)
+    }
+
+    public switchTo(state: State<Schemes, K>): void {
+        state.setContext(this)
+        this.currentState = state
     }
 }

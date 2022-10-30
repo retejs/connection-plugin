@@ -36,7 +36,7 @@ export class ConnectionPlugin<Schemes extends ClassicScheme, K> extends Scope<Co
             event.stopPropagation()
 
             if (pickedSocket) {
-                flow.pick(pickedSocket, type, flowContext)
+                flow.pick({ socket: pickedSocket, event: type }, flowContext)
             } else {
                 flow.drop(flowContext)
             }
