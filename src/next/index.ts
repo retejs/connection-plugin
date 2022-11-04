@@ -1,4 +1,4 @@
-import { NodeEditor, Scope } from 'rete'
+import { CanAssignSignal, NodeEditor, Scope } from 'rete'
 import { Area2DInherited, AreaPlugin } from 'rete-area-plugin'
 
 import { ClassicFlow, Flow } from './flow'
@@ -12,11 +12,22 @@ export type { Connection } from './types'
 
 console.log('connection')
 
-type ExpectArea2DExtra = { type: 'render', data: SocketData }
-export class ConnectionPlugin<Schemes extends ClassicScheme, K> extends Scope<Connection, Area2DInherited<Schemes, ExpectArea2DExtra>> {
-    constructor(editor: NodeEditor<Schemes>, areaPlugin: AreaPlugin<Schemes, K>, props?: { flow?: Flow<Schemes, any[]> }) {
+export type ExpectArea2DExtra = { type: 'render', data: SocketData }
+
+type IsCompatible<K> = K extends { data: infer P } ? CanAssignSignal<P, SocketData> : false
+type Substitute<K> = IsCompatible<K> extends true ? K : ExpectArea2DExtra
+
+export class ConnectionPlugin<Schemes extends ClassicScheme, K> extends Scope<
+    Connection,
+    Area2DInherited<Schemes, Substitute<K>>
+> {
+    constructor(
+        editor: NodeEditor<Schemes>,
+        areaPlugin: AreaPlugin<Schemes, Substitute<K>>,
+        props?: { flow?: Flow<Schemes, any[]> }
+    ) {
         super('connection')
-        const preudoconnection = createPseudoconnection(areaPlugin)
+        const preudoconnection = createPseudoconnection(areaPlugin as AreaPlugin<Schemes, K>)
         const socketsCache = new Map<Element, SocketData>()
         const flow: Flow<Schemes, any[]> = props?.flow || new ClassicFlow()
         const flowContext = { editor, scope: this, socketsCache }
@@ -46,21 +57,27 @@ export class ConnectionPlugin<Schemes extends ClassicScheme, K> extends Scope<Co
             update()
         }
 
-
         function pointerdownSocket(e: PointerEvent) {
             pick(e, 'down')
         }
 
+        // eslint-disable-next-line max-statements
         this.addPipe(context => {
+            if (!('type' in context)) return context
+
             if (context.type === 'pointermove') {
                 update()
             } else if (context.type === 'pointerup') {
                 pick(context.data.event, 'up')
-            } else if (context.type === 'render' && context.data.type === 'socket') {
-                const { element } = context.data
+            } else if (context.type === 'render') {
+                const withExtra = context as (typeof context) | ExpectArea2DExtra // inject extra type
 
-                element.addEventListener('pointerdown', pointerdownSocket)
-                socketsCache.set(element, context.data)
+                if (withExtra.data.type === 'socket') {
+                    const { element } = withExtra.data
+
+                    element.addEventListener('pointerdown', pointerdownSocket)
+                    socketsCache.set(element, withExtra.data)
+                }
             } else if (context.type === 'unmount') {
                 const { element } = context.data
 
