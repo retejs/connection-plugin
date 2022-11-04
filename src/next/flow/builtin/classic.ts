@@ -2,19 +2,19 @@ import { ClassicScheme, SocketData } from '../../types'
 import { Context, Flow, PickParams } from '../base'
 import { makeConnection, State, StateContext } from '../utils'
 
-class Picked extends State<ClassicScheme, any[]> {
+class Picked<Schemes extends ClassicScheme, K extends any[]> extends State<Schemes, K> {
 
     constructor(public initial: SocketData) {
         super()
     }
 
-    pick({ socket }: PickParams, context: Context<ClassicScheme, any[]>): void {
+    pick({ socket }: PickParams, context: Context<Schemes, K>): void {
         if (makeConnection(this.initial, socket, context)) {
             this.drop(context)
         }
     }
 
-    drop(context: Context<ClassicScheme, any[]>): void {
+    drop(context: Context<Schemes, K>): void {
         if (this.initial) {
             context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial } })
         }
@@ -22,9 +22,9 @@ class Picked extends State<ClassicScheme, any[]> {
     }
 }
 
-class PickedExisting extends State<ClassicScheme, any[]> {
+class PickedExisting<Schemes extends ClassicScheme, K extends any[]> extends State<Schemes, K> {
 
-    constructor(public connection: ClassicScheme['Connection'], context: Context<ClassicScheme, any[]>) {
+    constructor(public connection: Schemes['Connection'], context: Context<Schemes, K>) {
         super()
         const outputSocket = Array.from(context.socketsCache.values()).find(data => {
             return data.nodeId === this.connection.source
@@ -38,7 +38,7 @@ class PickedExisting extends State<ClassicScheme, any[]> {
         this.initial = outputSocket
     }
 
-    pick({ socket, event }: PickParams, context: Context<ClassicScheme, any[]>): void {
+    pick({ socket, event }: PickParams, context: Context<Schemes, K>): void {
         if (this.initial && !(socket.side === 'input' && this.connection.target === socket.nodeId && this.connection.targetInput === socket.key)) {
             if (makeConnection(this.initial, socket, context)) {
                 this.drop(context)
@@ -51,16 +51,16 @@ class PickedExisting extends State<ClassicScheme, any[]> {
         }
     }
 
-    drop(context: Context<ClassicScheme, any[]>): void {
+    drop(context: Context<Schemes, K>): void {
         if (this.initial) {
             context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial } })
         }
-        this.context.switchTo(new Idle())
+        this.context.switchTo(new Idle<Schemes, K>())
     }
 }
 
-class Idle extends State<ClassicScheme, any[]> {
-    pick({ socket, event }: PickParams, context: Context<ClassicScheme, any[]>): void {
+class Idle<Schemes extends ClassicScheme, K extends any[]> extends State<Schemes, K> {
+    pick({ socket, event }: PickParams, context: Context<Schemes, K>): void {
         if (event !== 'down') return
         if (socket.side === 'input') {
             const connection = context
@@ -76,7 +76,7 @@ class Idle extends State<ClassicScheme, any[]> {
         this.context.switchTo(new Picked(socket))
     }
 
-    drop(context: Context<ClassicScheme, any[]>): void {
+    drop(context: Context<Schemes, K>): void {
         if (this.initial) {
             context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial } })
         }
@@ -88,7 +88,7 @@ export class ClassicFlow<Schemes extends ClassicScheme, K extends any[]> impleme
     currentState!: State<Schemes, K>
 
     constructor() {
-        this.switchTo(new Idle())
+        this.switchTo(new Idle<Schemes, K>())
     }
 
     public pick(params: PickParams, context: Context<Schemes, K>) {
