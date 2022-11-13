@@ -20,12 +20,22 @@ export abstract class State<Schemes extends ClassicScheme, K extends any[]> {
     abstract drop(context: Context<Schemes, K>): void
 }
 
-export function makeConnection<Schemes extends ClassicScheme, K extends any[]>(initial: SocketData, socket: SocketData, context: Context<Schemes, K>) {
+export function getSourceTarget(initial: SocketData, socket: SocketData) {
     const forward = initial.side === 'output' && socket.side === 'input'
     const backward = initial.side === 'input' && socket.side === 'output'
     const [source, target] = forward
         ? [initial, socket]
         : (backward ? [socket, initial] : [])
+
+    if (source && target) return [source, target]
+}
+
+export function canMakeConnection(initial: SocketData, socket: SocketData) {
+    return Boolean(getSourceTarget(initial, socket))
+}
+
+export function makeConnection<Schemes extends ClassicScheme, K extends any[]>(initial: SocketData, socket: SocketData, context: Context<Schemes, K>) {
+    const [source, target] = getSourceTarget(initial, socket) || [null, null]
 
     if (source && target) {
         context.editor.addConnection({

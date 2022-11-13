@@ -14,19 +14,20 @@ console.log('connection')
 
 export type ExpectArea2DExtra = { type: 'render', data: SocketData }
 
-type IsCompatible<K> = K extends { data: infer P } ? CanAssignSignal<P, SocketData> : false
+type IsCompatible<K> = K extends { data: infer P } ? CanAssignSignal<P, SocketData> : false // TODO should add type: 'render' ??
 type Substitute<K> = IsCompatible<K> extends true ? K : ExpectArea2DExtra
 
 export class ConnectionPlugin<Schemes extends ClassicScheme, K> extends Scope<
     Connection,
     Area2DInherited<Schemes, Substitute<K>>
 > {
-    constructor(
+    constructor(props: {
         editor: NodeEditor<Schemes>,
-        areaPlugin: AreaPlugin<Schemes, Substitute<K>>,
-        props?: { flow?: Flow<Schemes, any[]> }
-    ) {
+        area: AreaPlugin<Schemes, Substitute<K>>,
+        flow?: Flow<Schemes, any[]>
+    }) {
         super('connection')
+        const { area: areaPlugin, editor } = props
         const preudoconnection = createPseudoconnection(areaPlugin as AreaPlugin<Schemes, K>)
         const socketsCache = new Map<Element, SocketData>()
         const flow: Flow<Schemes, any[]> = props?.flow || new ClassicFlow()

@@ -1,6 +1,8 @@
-import { ClassicScheme, SocketData } from '../../types'
-import { Context, Flow, PickParams } from '../base'
-import { makeConnection, State, StateContext } from '../utils'
+
+import { ClassicScheme, SocketData } from '../../../types'
+import { Context, Flow, PickParams } from '../../base'
+import { canMakeConnection, makeConnection, State, StateContext } from '../../utils'
+import { syncConnections } from './sync-connections'
 
 class Picked<Schemes extends ClassicScheme, K extends any[]> extends State<Schemes, K> {
 
@@ -9,7 +11,9 @@ class Picked<Schemes extends ClassicScheme, K extends any[]> extends State<Schem
     }
 
     pick({ socket }: PickParams, context: Context<Schemes, K>): void {
-        if (makeConnection(this.initial, socket, context)) {
+        if (canMakeConnection(this.initial, socket)) {
+            syncConnections([this.initial, socket], context.editor).commit()
+            makeConnection(this.initial, socket, context)
             this.drop(context)
         }
     }
@@ -23,6 +27,7 @@ class Picked<Schemes extends ClassicScheme, K extends any[]> extends State<Schem
 }
 
 class PickedExisting<Schemes extends ClassicScheme, K extends any[]> extends State<Schemes, K> {
+    initial!: SocketData
 
     constructor(public connection: Schemes['Connection'], context: Context<Schemes, K>) {
         super()
@@ -40,11 +45,14 @@ class PickedExisting<Schemes extends ClassicScheme, K extends any[]> extends Sta
 
     pick({ socket, event }: PickParams, context: Context<Schemes, K>): void {
         if (this.initial && !(socket.side === 'input' && this.connection.target === socket.nodeId && this.connection.targetInput === socket.key)) {
-            if (makeConnection(this.initial, socket, context)) {
+            if (canMakeConnection(this.initial, socket)) {
+                syncConnections([this.initial, socket], context.editor).commit()
+                makeConnection(this.initial, socket, context)
                 this.drop(context)
             }
         } else if (event === 'down') {
             if (this.initial) {
+                syncConnections([this.initial, socket], context.editor).commit()
                 makeConnection(this.initial, socket, context)
                 this.drop(context)
             }
