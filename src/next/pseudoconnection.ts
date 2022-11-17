@@ -1,3 +1,4 @@
+import { getUID } from 'rete'
 import { AreaPlugin } from 'rete-area-plugin'
 
 import { ClassicScheme, Position, SocketData } from './types'
@@ -21,13 +22,13 @@ export function createPseudoconnection<Schemes extends ClassicScheme, K>(areaPlu
                     element,
                     type: 'connection',
                     payload: isOutput ? {
-                        id: '',
+                        id: getUID(),
                         source: data.nodeId,
                         sourceOutput: data.key,
                         target: '',
                         targetInput: ''
                     } : {
-                        id: '',
+                        id: getUID(),
                         target: data.nodeId,
                         targetInput: data.key,
                         source: '',
