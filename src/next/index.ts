@@ -1,5 +1,5 @@
-import { CanAssignSignal, NodeEditor, Scope } from 'rete'
-import { Area2DInherited, AreaPlugin } from 'rete-area-plugin'
+import { CanAssignSignal, NodeEditor, Root, Scope } from 'rete'
+import { Area2D, Area2DInherited, AreaPlugin } from 'rete-area-plugin'
 
 import { ClassicFlow, Flow } from './flow'
 import { EventType } from './flow/base'
@@ -14,23 +14,28 @@ console.log('connection')
 
 export type ExpectArea2DExtra = { type: 'render', data: SocketData }
 
-type IsCompatible<K> = K extends { data: infer P } ? CanAssignSignal<P, SocketData> : false // TODO should add type: 'render' ??
+type IsCompatible<K> = Extract<K, { type: 'render' }> extends { type: 'render', data: infer P } ? CanAssignSignal<P, SocketData> : false // TODO should add type: 'render' ??
 type Substitute<K> = IsCompatible<K> extends true ? K : ExpectArea2DExtra
 
-export class ConnectionPlugin<Schemes extends ClassicScheme, K> extends Scope<
+export class ConnectionPlugin<Schemes extends ClassicScheme, K = never> extends Scope<
     Connection,
     Area2DInherited<Schemes, Substitute<K>>
 > {
-    constructor(props: {
-        editor: NodeEditor<Schemes>,
-        area: AreaPlugin<Schemes, Substitute<K>>,
+    constructor(private props?: {
         flow?: Flow<Schemes, any[]>
     }) {
         super('connection')
-        const { area: areaPlugin, editor } = props
-        const preudoconnection = createPseudoconnection(areaPlugin as AreaPlugin<Schemes, K>)
+    }
+
+    // eslint-disable-next-line max-statements
+    setParent(scope: Scope<Substitute<K> | Area2D<Schemes>, [Root<Schemes>]>): void {
+        super.setParent(scope)
+        const areaPlugin = this.parentScope<AreaPlugin<Schemes>>(AreaPlugin)
+        const editor = areaPlugin.parentScope<NodeEditor<Schemes>>(NodeEditor)
+        // const { area: areaPlugin, editor } = props
+        const preudoconnection = createPseudoconnection(areaPlugin)
         const socketsCache = new Map<Element, SocketData>()
-        const flow: Flow<Schemes, any[]> = props?.flow || new ClassicFlow()
+        const flow: Flow<Schemes, any[]> = this.props?.flow || new ClassicFlow()
         const flowContext = { editor, scope: this, socketsCache }
 
         function update() {
