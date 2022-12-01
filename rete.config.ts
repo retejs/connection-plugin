@@ -9,6 +9,7 @@ export default {
         })
     ],
     globals: {
-        'rete': 'Rete'
+        'rete': 'Rete',
+        'rete-area-plugin': 'ReteAreaPlugin'
     }
 }
