@@ -45,6 +45,7 @@ export class ConnectionPlugin<Schemes extends ClassicScheme, K = never> extends 
                 preudoconnection.render(areaPlugin.area.pointer, socket)
             }
         }
+        // eslint-disable-next-line max-statements
         function pick(event: PointerEvent, type: EventType) {
             const pointedElements = document.elementsFromPoint(event.clientX, event.clientY)
             const pickedSocket = findSocket(socketsCache, pointedElements)
@@ -54,6 +55,7 @@ export class ConnectionPlugin<Schemes extends ClassicScheme, K = never> extends 
 
             if (pickedSocket) {
                 flow.pick({ socket: pickedSocket, event: type }, flowContext)
+                preudoconnection.mount()
             } else {
                 flow.drop(flowContext)
             }

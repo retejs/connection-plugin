@@ -10,12 +10,13 @@ export function createPseudoconnection<Schemes extends ClassicScheme, K>(areaPlu
     element.style.left = '0'
     element.style.top = '0'
 
-    areaPlugin.area.appendChild(element)
-
     return {
-        element: element,
-        render(pointer: Position, data: SocketData) {
+        mount() {
+            areaPlugin.area.appendChild(element)
+        },
+        render({ x, y }: Position, data: SocketData) {
             const isOutput = data.side === 'output'
+            const pointer = { x: x + (isOutput ? -3 : 3), y } // fix hover of underlying elements
 
             areaPlugin.emit({
                 type: 'render', data: {
