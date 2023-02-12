@@ -32,7 +32,6 @@ export class ConnectionPlugin<Schemes extends ClassicScheme, K = never> extends 
         super.setParent(scope)
         const areaPlugin = this.parentScope<AreaPlugin<Schemes>>(AreaPlugin)
         const editor = areaPlugin.parentScope<NodeEditor<Schemes>>(NodeEditor)
-        // const { area: areaPlugin, editor } = props
         const preudoconnection = createPseudoconnection(areaPlugin)
         const socketsCache = new Map<Element, SocketData>()
         const flow: Flow<Schemes, any[]> = this.props?.flow || new ClassicFlow()

@@ -1,6 +1,7 @@
-import sass from 'rollup-plugin-sass';
+import { ReteOptions } from 'rete-cli'
+import sass from 'rollup-plugin-sass'
 
-export default {
+export default <ReteOptions>{
     input: 'src/index.ts',
     name: 'ConnectionPlugin',
     plugins: [
