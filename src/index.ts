@@ -1,76 +1,97 @@
-export * from './next'
+import { CanAssignSignal, NodeEditor, Root, Scope } from 'rete'
+import { Area2D, Area2DInherited, AreaPlugin } from 'rete-area-plugin'
 
-// import { NodeEditor } from 'rete';
-// import { renderConnection, renderPathData, updateConnection, getMapItemRecursively } from './utils';
-// import { Picker } from './picker';
-// import { Flow, FlowParams } from './flow';
-// import './events';
-// import './index.sass';
+import { ClassicFlow, Flow } from './flow'
+import { EventType } from './flow/base'
+import { createPseudoconnection } from './pseudoconnection'
+import { ClassicScheme, Connection, SocketData } from './types'
+import { findSocket } from './utils'
 
-// function install(editor: NodeEditor) {
-//     editor.bind('connectionpath');
-//     editor.bind('connectiondrop');
-//     editor.bind('connectionpick');
-//     editor.bind('resetconnection');
+export * from './flow'
+export type { Connection } from './types'
 
-//     const picker = new Picker(editor);
-//     const flow = new Flow(picker);
-//     const socketsParams = new WeakMap<Element, FlowParams>();
+console.log('connection')
 
-//     function pointerDown(this: HTMLElement, e: PointerEvent) {
-//         const flowParams = socketsParams.get(this);
+export type ExpectArea2DExtra = { type: 'render', data: SocketData }
 
-//         if(flowParams) {
-//             const { input, output } = flowParams;
+type IsCompatible<K> = Extract<K, { type: 'render' }> extends { type: 'render', data: infer P } ? CanAssignSignal<P, SocketData> : false // TODO should add type: 'render' ??
+type Substitute<K> = IsCompatible<K> extends true ? K : ExpectArea2DExtra
 
-//             editor.view.container.dispatchEvent(new PointerEvent('pointermove', e));
-//             e.preventDefault();
-//             e.stopPropagation();
-//             flow.start({ input, output }, input || output);
-//         }
-//     }
+export class ConnectionPlugin<Schemes extends ClassicScheme, K = never> extends Scope<
+    Connection,
+    Area2DInherited<Schemes, Substitute<K>>
+> {
+    constructor(private props?: {
+        flow?: Flow<Schemes, any[]>
+    }) {
+        super('connection')
+    }
 
-//     function pointerUp(this: Window, e: PointerEvent) {
-//         const flowEl = document.elementFromPoint(e.clientX, e.clientY);
+    // eslint-disable-next-line max-statements
+    setParent(scope: Scope<Substitute<K> | Area2D<Schemes>, [Root<Schemes>]>): void {
+        super.setParent(scope)
+        const areaPlugin = this.parentScope<AreaPlugin<Schemes>>(AreaPlugin)
+        const editor = areaPlugin.parentScope<NodeEditor<Schemes>>(NodeEditor)
+        const preudoconnection = createPseudoconnection(areaPlugin)
+        const socketsCache = new Map<Element, SocketData>()
+        const flow: Flow<Schemes, any[]> = this.props?.flow || new ClassicFlow()
+        const flowContext = { editor, scope: this, socketsCache }
 
-//         if(picker.io) {
-//             editor.trigger('connectiondrop', picker.io)
-//         }
-//         if(flowEl) {
-//             flow.complete(getMapItemRecursively(socketsParams, flowEl) || {})
-//         }
-//     }
+        function update() {
+            const socket = flow.getPickedSocket()
 
-//     editor.on('resetconnection', () => flow.complete());
+            if (socket) {
+                preudoconnection.render(areaPlugin.area.pointer, socket)
+            }
+        }
+        // eslint-disable-next-line max-statements
+        function pick(event: PointerEvent, type: EventType) {
+            const pointedElements = document.elementsFromPoint(event.clientX, event.clientY)
+            const pickedSocket = findSocket(socketsCache, pointedElements)
 
-//     editor.on('rendersocket', ({ el, input, output }) => {
-//         socketsParams.set(el, { input, output });
+            event.preventDefault()
+            event.stopPropagation()
 
-//         el.removeEventListener('pointerdown', pointerDown);
-//         el.addEventListener('pointerdown', pointerDown);
-//     });
+            if (pickedSocket) {
+                flow.pick({ socket: pickedSocket, event: type }, flowContext)
+                preudoconnection.mount()
+            } else {
+                flow.drop(flowContext)
+            }
+            if (!flow.getPickedSocket()) {
+                preudoconnection.unmount()
+            }
+            update()
+        }
 
-//     window.addEventListener('pointerup', pointerUp);
+        function pointerdownSocket(e: PointerEvent) {
+            pick(e, 'down')
+        }
 
-//     editor.on('renderconnection', ({ el, connection, points }) => {
-//         const d = renderPathData(editor, points, connection);
+        // eslint-disable-next-line max-statements
+        this.addPipe(context => {
+            if (!('type' in context)) return context
 
-//         renderConnection({ el, d, connection })
-//     });
+            if (context.type === 'pointermove') {
+                update()
+            } else if (context.type === 'pointerup') {
+                pick(context.data.event, 'up')
+            } else if (context.type === 'render') {
+                const withExtra = context as (typeof context) | ExpectArea2DExtra // inject extra type
 
-//     editor.on('updateconnection', ({ el, connection, points }) => {
-//         const d = renderPathData(editor, points, connection);
+                if (withExtra.data.type === 'socket') {
+                    const { element } = withExtra.data
 
-//         updateConnection({ el, d });
-//     });
+                    element.addEventListener('pointerdown', pointerdownSocket)
+                    socketsCache.set(element, withExtra.data)
+                }
+            } else if (context.type === 'unmount') {
+                const { element } = context.data
 
-//     editor.on('destroy', () => {
-//         window.removeEventListener('pointerup', pointerUp);
-//     });
-// }
-
-// export default {
-//     name: 'connection',
-//     install
-// }
-// export { defaultPath } from './utils';
+                element.removeEventListener('pointerdown', pointerdownSocket)
+                socketsCache.delete(element)
+            }
+            return context
+        })
+    }
+}
