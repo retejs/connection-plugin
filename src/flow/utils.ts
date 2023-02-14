@@ -9,42 +9,42 @@ export interface StateContext<Schemes extends ClassicScheme, K extends any[]> {
 }
 
 export abstract class State<Schemes extends ClassicScheme, K extends any[]> {
-    context!: StateContext<Schemes, K>
-    initial: SocketData | undefined
+  context!: StateContext<Schemes, K>
+  initial: SocketData | undefined
 
-    setContext(context: StateContext<Schemes, K>) {
-        this.context = context
-    }
+  setContext(context: StateContext<Schemes, K>) {
+    this.context = context
+  }
 
     abstract pick(params: PickParams, context: Context<Schemes, K>): void
     abstract drop(context: Context<Schemes, K>): void
 }
 
 export function getSourceTarget(initial: SocketData, socket: SocketData) {
-    const forward = initial.side === 'output' && socket.side === 'input'
-    const backward = initial.side === 'input' && socket.side === 'output'
-    const [source, target] = forward
-        ? [initial, socket]
-        : (backward ? [socket, initial] : [])
+  const forward = initial.side === 'output' && socket.side === 'input'
+  const backward = initial.side === 'input' && socket.side === 'output'
+  const [source, target] = forward
+    ? [initial, socket]
+    : (backward ? [socket, initial] : [])
 
-    if (source && target) return [source, target]
+  if (source && target) return [source, target]
 }
 
 export function canMakeConnection(initial: SocketData, socket: SocketData) {
-    return Boolean(getSourceTarget(initial, socket))
+  return Boolean(getSourceTarget(initial, socket))
 }
 
 export function makeConnection<Schemes extends ClassicScheme, K extends any[]>(initial: SocketData, socket: SocketData, context: Context<Schemes, K>) {
-    const [source, target] = getSourceTarget(initial, socket) || [null, null]
+  const [source, target] = getSourceTarget(initial, socket) || [null, null]
 
-    if (source && target) {
-        context.editor.addConnection({
-            id: getUID(),
-            source: source.nodeId,
-            sourceOutput: source.key,
-            target: target.nodeId,
-            targetInput: target.key
-        })
-        return true
-    }
+  if (source && target) {
+    context.editor.addConnection({
+      id: getUID(),
+      source: source.nodeId,
+      sourceOutput: source.key,
+      target: target.nodeId,
+      targetInput: target.key
+    })
+    return true
+  }
 }
