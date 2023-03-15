@@ -3,7 +3,7 @@ import { AreaPlugin } from 'rete-area-plugin'
 
 import { ClassicScheme, Position, SocketData } from './types'
 
-export function createPseudoconnection<Schemes extends ClassicScheme, K>(areaPlugin: AreaPlugin<Schemes, K>) {
+export function createPseudoconnection<Schemes extends ClassicScheme, K>() {
   const element = document.createElement('div')
 
   element.style.position = 'absolute'
@@ -11,10 +11,10 @@ export function createPseudoconnection<Schemes extends ClassicScheme, K>(areaPlu
   element.style.top = '0'
 
   return {
-    mount() {
+    mount(areaPlugin: AreaPlugin<Schemes, K>) {
       areaPlugin.area.appendChild(element)
     },
-    render({ x, y }: Position, data: SocketData) {
+    render(areaPlugin: AreaPlugin<Schemes, K>, { x, y }: Position, data: SocketData) {
       const isOutput = data.side === 'output'
       const pointer = { x: x + (isOutput ? -3 : 3), y } // fix hover of underlying elements
 
@@ -39,7 +39,7 @@ export function createPseudoconnection<Schemes extends ClassicScheme, K>(areaPlu
         }
       })
     },
-    unmount() {
+    unmount(areaPlugin: AreaPlugin<Schemes, K>) {
       areaPlugin.emit({ type: 'unmount', data: { element } })
     }
   }

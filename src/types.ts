@@ -1,5 +1,7 @@
 import { ClassicPreset as Classic, GetSchemes } from 'rete'
 
+import { Flow } from './flow'
+
 export type Position = { x: number, y: number }
 export type Side = 'input' | 'output'
 export type SocketData = {
@@ -16,3 +18,5 @@ export type ClassicScheme = GetSchemes<Classic.Node, Classic.Connection<Classic.
 export type Connection =
     | { type: 'connectionpick' }
     | { type: 'connectiondrop', data: { initial: SocketData } }
+
+export type Preset<Schemes extends ClassicScheme> = (data: SocketData) => Flow<Schemes, any[]> | undefined

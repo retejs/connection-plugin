@@ -1,13 +1,14 @@
 import { CanAssignSignal, NodeEditor, Root, Scope } from 'rete'
 import { Area2D, Area2DInherited, AreaPlugin } from 'rete-area-plugin'
 
-import { ClassicFlow, Flow } from './flow'
+import { Flow } from './flow'
 import { EventType } from './flow/base'
 import { createPseudoconnection } from './pseudoconnection'
-import { ClassicScheme, Connection, SocketData } from './types'
+import { ClassicScheme, Connection, Preset, SocketData } from './types'
 import { findSocket } from './utils'
 
 export * from './flow'
+export * as Presets from './presets'
 export type { Connection } from './types'
 
 export type ExpectArea2DExtra = { type: 'render', data: SocketData }
@@ -19,51 +20,72 @@ export class ConnectionPlugin<Schemes extends ClassicScheme, K = never> extends 
     Connection,
     Area2DInherited<Schemes, Substitute<K>>
 > {
-  constructor(private props?: {
-        flow?: Flow<Schemes, any[]>
-    }) {
+  presets: Preset<Schemes>[] = []
+  private areaPlugin!: AreaPlugin<Schemes>
+  private editor!: NodeEditor<Schemes>
+  private currentFlow: Flow<Schemes, any[]> | null = null
+  private preudoconnection = createPseudoconnection()
+  private socketsCache = new Map<Element, SocketData>()
+
+  constructor() {
     super('connection')
   }
 
+  public addPreset(preset: Preset<Schemes>) {
+    this.presets.push(preset)
+  }
+
+  private findPreset(data: SocketData) {
+    for (const preset of this.presets) {
+      const flow = preset(data)
+
+      if (flow) return flow
+    }
+    return null
+  }
+
+  update() {
+    if (!this.currentFlow) return
+    const socket = this.currentFlow.getPickedSocket()
+
+    if (socket) {
+      this.preudoconnection.render(this.areaPlugin, this.areaPlugin.area.pointer, socket)
+    }
+  }
+
   // eslint-disable-next-line max-statements
+  pick(event: PointerEvent, type: EventType) {
+    const flowContext = { editor: this.editor, scope: this, socketsCache: this.socketsCache }
+    const pointedElements = document.elementsFromPoint(event.clientX, event.clientY)
+    const pickedSocket = findSocket(this.socketsCache, pointedElements)
+
+    event.preventDefault()
+    event.stopPropagation()
+
+    if (pickedSocket) {
+      this.currentFlow = this.currentFlow || this.findPreset(pickedSocket)
+
+      if (this.currentFlow) {
+        this.currentFlow.pick({ socket: pickedSocket, event: type }, flowContext)
+        this.preudoconnection.mount(this.areaPlugin)
+      }
+    } else if (this.currentFlow) {
+      this.currentFlow.drop(flowContext)
+    }
+    if (this.currentFlow && !this.currentFlow.getPickedSocket()) {
+      this.preudoconnection.unmount(this.areaPlugin)
+      this.currentFlow = null
+    }
+    this.update()
+  }
+
   setParent(scope: Scope<Substitute<K> | Area2D<Schemes>, [Root<Schemes>]>): void {
     super.setParent(scope)
-    const areaPlugin = this.parentScope<AreaPlugin<Schemes>>(AreaPlugin)
-    const editor = areaPlugin.parentScope<NodeEditor<Schemes>>(NodeEditor)
-    const preudoconnection = createPseudoconnection(areaPlugin)
-    const socketsCache = new Map<Element, SocketData>()
-    const flow: Flow<Schemes, any[]> = this.props?.flow || new ClassicFlow()
-    const flowContext = { editor, scope: this, socketsCache }
+    this.areaPlugin = this.parentScope<AreaPlugin<Schemes>>(AreaPlugin)
+    this.editor = this.areaPlugin.parentScope<NodeEditor<Schemes>>(NodeEditor)
 
-    function update() {
-      const socket = flow.getPickedSocket()
-
-      if (socket) {
-        preudoconnection.render(areaPlugin.area.pointer, socket)
-      }
-    }
-    // eslint-disable-next-line max-statements
-    function pick(event: PointerEvent, type: EventType) {
-      const pointedElements = document.elementsFromPoint(event.clientX, event.clientY)
-      const pickedSocket = findSocket(socketsCache, pointedElements)
-
-      event.preventDefault()
-      event.stopPropagation()
-
-      if (pickedSocket) {
-        flow.pick({ socket: pickedSocket, event: type }, flowContext)
-        preudoconnection.mount()
-      } else {
-        flow.drop(flowContext)
-      }
-      if (!flow.getPickedSocket()) {
-        preudoconnection.unmount()
-      }
-      update()
-    }
-
-    function pointerdownSocket(e: PointerEvent) {
-      pick(e, 'down')
+    const pointerdownSocket = (e: PointerEvent) => {
+      this.pick(e, 'down')
     }
 
     // eslint-disable-next-line max-statements
@@ -71,9 +93,9 @@ export class ConnectionPlugin<Schemes extends ClassicScheme, K = never> extends 
       if (!('type' in context)) return context
 
       if (context.type === 'pointermove') {
-        update()
+        this.update()
       } else if (context.type === 'pointerup') {
-        pick(context.data.event, 'up')
+        this.pick(context.data.event, 'up')
       } else if (context.type === 'render') {
         const withExtra = context as (typeof context) | ExpectArea2DExtra // inject extra type
 
@@ -81,13 +103,13 @@ export class ConnectionPlugin<Schemes extends ClassicScheme, K = never> extends 
           const { element } = withExtra.data
 
           element.addEventListener('pointerdown', pointerdownSocket)
-          socketsCache.set(element, withExtra.data)
+          this.socketsCache.set(element, withExtra.data)
         }
       } else if (context.type === 'unmount') {
         const { element } = context.data
 
         element.removeEventListener('pointerdown', pointerdownSocket)
-        socketsCache.delete(element)
+        this.socketsCache.delete(element)
       }
       return context
     })
