@@ -12,7 +12,7 @@ export function createPseudoconnection<Schemes extends ClassicScheme, K>() {
 
   return {
     mount(areaPlugin: AreaPlugin<Schemes, K>) {
-      areaPlugin.area.appendChild(element)
+      areaPlugin.area.content.add(element)
     },
     render(areaPlugin: AreaPlugin<Schemes, K>, { x, y }: Position, data: SocketData) {
       const isOutput = data.side === 'output'
