@@ -1,42 +1,23 @@
-Rete connection plugin
+Rete.js Connection plugin
 ====
-#### Rete.js plugin
+[![Made in Ukraine](https://img.shields.io/badge/made_in-ukraine-ffd700.svg?labelColor=0057b7)](https://stand-with-ukraine.pp.ua)
+[![Discord](https://img.shields.io/discord/1081223198055604244?color=%237289da&label=Discord)](https://discord.gg/cxSFkPZdsV)
 
-Install
----
-```js
-import ConnectionPlugin from 'rete-connection-plugin';
+**Rete.js plugin**
 
-editor.use(ConnectionPlugin);
-```
+## Key features
 
-Events
----
+- **Interactive connection**: adding or removing connections with the cursor
+- **Swappable flows**: you can choose different ways to interact
 
-```js
-editor.on('connectionpath', data => {
-    const {
-        points, // array of numbers, e.g. [x1, y1, x2, y2]
-        connection, // Rete.Connection instance
-        d // string, d attribute of <path>
-    } = data;
+## Getting Started
 
-    data.d = `M ${x1} ${y1} ${x2} ${y2}`; // you can override the path curve
-});
-```
+Please refer to the [guide](https://retejs.org/docs/guides/basic#interactive-connections) and [example](https://retejs.org/examples) using this plugin
 
-```js
-editor.on('connectiondrop', io /* Input or Output */ => {
-    // triggered when the user drops picked connection
-});
-```
+## Contribution
 
-```js
-editor.on('connectionpick', io /* Input or Output */ => {
-    // triggered when the user tries to pick a connection
-    // you can prevent it
-    return false;
-});
+Please refer to the [Contribution](https://retejs.org/docs/contribution) guide
 
-editor.trigger('resetconnection'); // reset pseudo connection
-```
+## License
+
+[MIT](https://github.com/retejs/area-plugin/blob/master/LICENSE)
