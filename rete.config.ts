@@ -4,7 +4,7 @@ import sass from 'rollup-plugin-sass'
 
 export default <ReteOptions>{
   input: 'src/index.ts',
-  name: 'ConnectionPlugin',
+  name: 'ReteConnectionPlugin',
   plugins: [
     sass({
       insert: true
