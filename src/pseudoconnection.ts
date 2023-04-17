@@ -5,6 +5,7 @@ import { ClassicScheme, Position, SocketData } from './types'
 
 export function createPseudoconnection<Schemes extends ClassicScheme, K>() {
   const element = document.createElement('div')
+  let id: string | null = null
 
   element.style.position = 'absolute'
   element.style.left = '0'
@@ -12,24 +13,27 @@ export function createPseudoconnection<Schemes extends ClassicScheme, K>() {
 
   return {
     mount(areaPlugin: AreaPlugin<Schemes, K>) {
+      id = `pseudo_${getUID()}`
       areaPlugin.area.content.add(element)
     },
     render(areaPlugin: AreaPlugin<Schemes, K>, { x, y }: Position, data: SocketData) {
       const isOutput = data.side === 'output'
       const pointer = { x: x + (isOutput ? -3 : 3), y } // fix hover of underlying elements
 
+      if (!id) throw new Error('pseudo connection id wasn\'t generated')
+
       areaPlugin.emit({
         type: 'render', data: {
           element,
           type: 'connection',
           payload: isOutput ? {
-            id: getUID(),
+            id,
             source: data.nodeId,
             sourceOutput: data.key,
             target: '',
             targetInput: ''
           } : {
-            id: getUID(),
+            id,
             target: data.nodeId,
             targetInput: data.key,
             source: '',
@@ -40,6 +44,7 @@ export function createPseudoconnection<Schemes extends ClassicScheme, K>() {
       })
     },
     unmount(areaPlugin: AreaPlugin<Schemes, K>) {
+      id = null
       areaPlugin.emit({ type: 'unmount', data: { element } })
     }
   }
