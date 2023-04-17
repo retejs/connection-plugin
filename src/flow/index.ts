@@ -1,4 +1,6 @@
 export * from './base'
+export type { BidirectParams } from './builtin/bidirect'
 export { BidirectFlow } from './builtin/bidirect'
+export type { ClassicParams } from './builtin/classic'
 export { ClassicFlow } from './builtin/classic'
 export * from './utils'

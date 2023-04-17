@@ -9,7 +9,7 @@ import { findSocket } from './utils'
 
 export * from './flow'
 export * as Presets from './presets'
-export type { Connection } from './types'
+export type { Connection, Preset, Side, SocketData } from './types'
 
 export type ExpectArea2DExtra = { type: 'render', data: SocketData }
 

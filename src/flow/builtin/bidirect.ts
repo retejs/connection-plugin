@@ -1,16 +1,21 @@
 import { ClassicScheme, SocketData } from '../../types'
 import { Context, Flow, PickParams } from '../base'
-import { makeConnection, State, StateContext } from '../utils'
+import { makeConnection as defaultMakeConnection, State, StateContext } from '../utils'
+
+export type BidirectParams<Schemes extends ClassicScheme> = {
+  pickByClick: boolean
+  makeConnection: <K extends any[]>(from: SocketData, to: SocketData, context: Context<Schemes, K>) => boolean | undefined
+}
 
 class Picked<Schemes extends ClassicScheme, K extends any[]> extends State<Schemes, K> {
-  constructor(public initial: SocketData, private pickByClick: boolean) {
+  constructor(public initial: SocketData, private params: BidirectParams<Schemes>) {
     super()
   }
 
   pick({ socket }: PickParams, context: Context<Schemes, K>): void {
-    if (makeConnection(this.initial, socket, context)) {
+    if (this.params.makeConnection(this.initial, socket, context)) {
       this.drop(context)
-    } else if (!this.pickByClick) {
+    } else if (!this.params.pickByClick) {
       this.drop(context)
     }
   }
@@ -19,18 +24,18 @@ class Picked<Schemes extends ClassicScheme, K extends any[]> extends State<Schem
     if (this.initial) {
       context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial } })
     }
-    this.context.switchTo(new Idle<Schemes, K>(this.pickByClick))
+    this.context.switchTo(new Idle<Schemes, K>(this.params))
   }
 }
 
 class Idle<Schemes extends ClassicScheme, K extends any[]> extends State<Schemes, K> {
-  constructor(private pickByClick: boolean) {
+  constructor(private params: BidirectParams<Schemes>) {
     super()
   }
 
   pick({ socket, event }: PickParams): void {
     if (event === 'down') {
-      this.context.switchTo(new Picked(socket, this.pickByClick))
+      this.context.switchTo(new Picked(socket, this.params))
     }
   }
 
@@ -45,8 +50,11 @@ class Idle<Schemes extends ClassicScheme, K extends any[]> extends State<Schemes
 export class BidirectFlow<Schemes extends ClassicScheme, K extends any[]> implements StateContext<Schemes, K>, Flow<Schemes, K> {
   currentState!: State<Schemes, K>
 
-  constructor(props?: { pickByClick?: boolean }) {
-    this.switchTo(new Idle(Boolean(props?.pickByClick)))
+  constructor(params?: Partial<BidirectParams<Schemes>>) {
+    const pickByClick = Boolean(params?.pickByClick)
+    const makeConnection = params?.makeConnection || defaultMakeConnection
+
+    this.switchTo(new Idle({ pickByClick, makeConnection }))
   }
 
   public pick(params: PickParams, context: Context<Schemes, K>) {
