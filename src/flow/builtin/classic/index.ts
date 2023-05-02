@@ -19,14 +19,15 @@ class Picked<Schemes extends ClassicScheme, K extends any[]> extends State<Schem
   pick({ socket }: PickParams, context: Context<Schemes, K>): void {
     if (this.params.canMakeConnection(this.initial, socket)) {
       syncConnections([this.initial, socket], context.editor).commit()
-      this.params.makeConnection(this.initial, socket, context)
-      this.drop(context)
+      const created = this.params.makeConnection(this.initial, socket, context)
+
+      this.drop(context, created ? socket : null, created)
     }
   }
 
-  drop(context: Context<Schemes, K>): void {
+  drop(context: Context<Schemes, K>, socket: SocketData | null = null, created = false): void {
     if (this.initial) {
-      context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial } })
+      context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial, socket, created } })
     }
     this.context.switchTo(new Idle(this.params))
   }
@@ -54,21 +55,23 @@ class PickedExisting<Schemes extends ClassicScheme, K extends any[]> extends Sta
     if (this.initial && !(socket.side === 'input' && this.connection.target === socket.nodeId && this.connection.targetInput === socket.key)) {
       if (this.params.canMakeConnection(this.initial, socket)) {
         syncConnections([this.initial, socket], context.editor).commit()
-        this.params.makeConnection(this.initial, socket, context)
-        this.drop(context)
+        const created = this.params.makeConnection(this.initial, socket, context)
+
+        this.drop(context, created ? socket : null, created)
       }
     } else if (event === 'down') {
       if (this.initial) {
         syncConnections([this.initial, socket], context.editor).commit()
-        this.params.makeConnection(this.initial, socket, context)
-        this.drop(context)
+        const created = this.params.makeConnection(this.initial, socket, context)
+
+        this.drop(context, created ? socket : null, created)
       }
     }
   }
 
-  drop(context: Context<Schemes, K>): void {
+  drop(context: Context<Schemes, K>, socket: SocketData | null = null, created = false): void {
     if (this.initial) {
-      context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial } })
+      context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial, socket, created } })
     }
     this.context.switchTo(new Idle<Schemes, K>(this.params))
   }
@@ -96,9 +99,9 @@ class Idle<Schemes extends ClassicScheme, K extends any[]> extends State<Schemes
     this.context.switchTo(new Picked(socket, this.params))
   }
 
-  drop(context: Context<Schemes, K>): void {
+  drop(context: Context<Schemes, K>, socket: SocketData | null = null, created = false): void {
     if (this.initial) {
-      context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial } })
+      context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial, socket, created } })
     }
     delete this.initial
   }

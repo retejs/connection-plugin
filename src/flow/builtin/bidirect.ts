@@ -14,15 +14,15 @@ class Picked<Schemes extends ClassicScheme, K extends any[]> extends State<Schem
 
   pick({ socket }: PickParams, context: Context<Schemes, K>): void {
     if (this.params.makeConnection(this.initial, socket, context)) {
-      this.drop(context)
+      this.drop(context, socket, true)
     } else if (!this.params.pickByClick) {
-      this.drop(context)
+      this.drop(context, socket)
     }
   }
 
-  drop(context: Context<ClassicScheme, K>): void {
+  drop(context: Context<ClassicScheme, K>, socket: SocketData | null = null, created = false): void {
     if (this.initial) {
-      context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial } })
+      context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial, socket, created } })
     }
     this.context.switchTo(new Idle<Schemes, K>(this.params))
   }
@@ -40,9 +40,9 @@ class Idle<Schemes extends ClassicScheme, K extends any[]> extends State<Schemes
     }
   }
 
-  drop(context: Context<Schemes, K>): void {
+  drop(context: Context<Schemes, K>, socket: SocketData | null = null, created = false): void {
     if (this.initial) {
-      context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial } })
+      context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial, socket, created } })
     }
     delete this.initial
   }

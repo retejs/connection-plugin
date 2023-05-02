@@ -23,7 +23,7 @@ export type ClassicScheme = GetSchemes<
 >
 
 export type Connection =
-    | { type: 'connectionpick' }
-    | { type: 'connectiondrop', data: { initial: SocketData } }
+    | { type: 'connectionpick', data: { socket: SocketData } }
+    | { type: 'connectiondrop', data: { initial: SocketData, socket: SocketData | null, created: boolean } }
 
 export type Preset<Schemes extends ClassicScheme> = (data: SocketData) => Flow<Schemes, any[]> | undefined
