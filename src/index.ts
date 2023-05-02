@@ -9,6 +9,7 @@ import { findSocket } from './utils'
 
 export * from './flow'
 export * as Presets from './presets'
+export { createPseudoconnection } from './pseudoconnection'
 export type { Connection, Preset, Side, SocketData } from './types'
 
 export type ExpectArea2DExtra = { type: 'render', data: SocketData }
@@ -24,7 +25,7 @@ export class ConnectionPlugin<Schemes extends ClassicScheme, K = never> extends 
   private areaPlugin!: AreaPlugin<Schemes>
   private editor!: NodeEditor<Schemes>
   private currentFlow: Flow<Schemes, any[]> | null = null
-  private preudoconnection = createPseudoconnection()
+  private preudoconnection = createPseudoconnection({ isPseudo: true })
   private socketsCache = new Map<Element, SocketData>()
 
   constructor() {

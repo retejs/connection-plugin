@@ -3,7 +3,7 @@ import { AreaPlugin } from 'rete-area-plugin'
 
 import { ClassicScheme, Position, SocketData } from './types'
 
-export function createPseudoconnection<Schemes extends ClassicScheme, K>() {
+export function createPseudoconnection<Schemes extends ClassicScheme, K>(extra?: Partial<Schemes['Connection']>) {
   const element = document.createElement('div')
   let id: string | null = null
 
@@ -12,6 +12,9 @@ export function createPseudoconnection<Schemes extends ClassicScheme, K>() {
   element.style.top = '0'
 
   return {
+    isMounted() {
+      return Boolean(id)
+    },
     mount(areaPlugin: AreaPlugin<Schemes, K>) {
       id = `pseudo_${getUID()}`
       areaPlugin.area.content.add(element)
@@ -31,13 +34,15 @@ export function createPseudoconnection<Schemes extends ClassicScheme, K>() {
             source: data.nodeId,
             sourceOutput: data.key,
             target: '',
-            targetInput: ''
+            targetInput: '',
+            ...(extra || {})
           } : {
             id,
             target: data.nodeId,
             targetInput: data.key,
             source: '',
-            sourceOutput: ''
+            sourceOutput: '',
+            ...(extra || {})
           },
           ...(isOutput ? { end: pointer } : { start: pointer })
         }

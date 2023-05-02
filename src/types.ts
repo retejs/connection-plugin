@@ -13,7 +13,14 @@ export type SocketData = {
   // wrongField: true
 }
 
-export type ClassicScheme = GetSchemes<Classic.Node, Classic.Connection<Classic.Node, Classic.Node>>
+export type ConnectionExtra = {
+  isPseudo?: boolean
+}
+
+export type ClassicScheme = GetSchemes<
+  Classic.Node,
+  Classic.Connection<Classic.Node, Classic.Node> & ConnectionExtra
+>
 
 export type Connection =
     | { type: 'connectionpick' }
