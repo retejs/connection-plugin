@@ -33,8 +33,9 @@ class Idle<Schemes extends ClassicScheme, K extends any[]> extends State<Schemes
     super()
   }
 
-  pick({ socket, event }: PickParams): void {
+  pick({ socket, event }: PickParams, context: Context<Schemes, K>): void {
     if (event === 'down') {
+      context.scope.emit({ type: 'connectionpick', data: { socket } })
       this.context.switchTo(new Picked(socket, this.params))
     }
   }

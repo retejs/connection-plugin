@@ -45,6 +45,7 @@ class PickedExisting<Schemes extends ClassicScheme, K extends any[]> extends Sta
 
     if (!outputSocket) throw new Error('cannot find output socket')
 
+    context.scope.emit({ type: 'connectionpick', data: { socket: outputSocket } })
     context.editor.removeConnection(this.connection.id)
     this.initial = outputSocket
   }
@@ -91,6 +92,7 @@ class Idle<Schemes extends ClassicScheme, K extends any[]> extends State<Schemes
       }
     }
 
+    context.scope.emit({ type: 'connectionpick', data: { socket } })
     this.context.switchTo(new Picked(socket, this.params))
   }
 
