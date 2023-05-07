@@ -1,10 +1,10 @@
-import { CanAssignSignal, NodeEditor, Root, Scope } from 'rete'
-import { Area2D, Area2DInherited, AreaPlugin } from 'rete-area-plugin'
+import { NodeEditor, Root, Scope } from 'rete'
+import { Area2D, Area2DInherited, AreaPlugin, RenderSignal } from 'rete-area-plugin'
 
 import { Flow } from './flow'
 import { EventType } from './flow/base'
 import { createPseudoconnection } from './pseudoconnection'
-import { ClassicScheme, Connection, Preset, SocketData } from './types'
+import { ClassicScheme, Connection, Preset, Side, SocketData } from './types'
 import { findSocket } from './utils'
 
 export * from './flow'
@@ -12,15 +12,14 @@ export * as Presets from './presets'
 export { createPseudoconnection } from './pseudoconnection'
 export type { Connection, Preset, Side, SocketData } from './types'
 
-export type ExpectArea2DExtra = { type: 'render', data: SocketData }
+export type ExpectArea2DExtra =
+  | RenderSignal<'socket', {
+    nodeId: string,
+    side: Side,
+    key: string
+  }>
 
-type IsCompatible<K> = Extract<K, { type: 'render' }> extends { type: 'render', data: infer P } ? CanAssignSignal<P, SocketData> : false // TODO should add type: 'render' ??
-type Substitute<K> = IsCompatible<K> extends true ? K : ExpectArea2DExtra
-
-export class ConnectionPlugin<Schemes extends ClassicScheme, K = never> extends Scope<
-    Connection,
-    Area2DInherited<Schemes, Substitute<K>>
-> {
+export class ConnectionPlugin<Schemes extends ClassicScheme, K = never> extends Scope<Connection, Area2DInherited<Schemes, ExpectArea2DExtra | K>> {
   presets: Preset<Schemes>[] = []
   private areaPlugin!: AreaPlugin<Schemes>
   private editor!: NodeEditor<Schemes>
@@ -80,7 +79,7 @@ export class ConnectionPlugin<Schemes extends ClassicScheme, K = never> extends 
     this.update()
   }
 
-  setParent(scope: Scope<Substitute<K> | Area2D<Schemes>, [Root<Schemes>]>): void {
+  setParent(scope: Scope<Area2D<Schemes> | ExpectArea2DExtra, [Root<Schemes>]>): void {
     super.setParent(scope)
     this.areaPlugin = this.parentScope<AreaPlugin<Schemes>>(AreaPlugin)
     this.editor = this.areaPlugin.parentScope<NodeEditor<Schemes>>(NodeEditor)
@@ -91,7 +90,7 @@ export class ConnectionPlugin<Schemes extends ClassicScheme, K = never> extends 
 
     // eslint-disable-next-line max-statements
     this.addPipe(context => {
-      if (!('type' in context)) return context
+      if (!context || typeof context !== 'object' || !('type' in context)) return context
 
       if (context.type === 'pointermove') {
         this.update()
