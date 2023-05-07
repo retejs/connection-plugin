@@ -1,6 +1,6 @@
 {
   "name": "rete-connection-plugin",
-  "version": "2.0.0-beta.12",
+  "version": "2.0.0-beta.13",
   "description": "",
   "scripts": {
     "build": "rete build -c rete.config.ts",
@@ -22,12 +22,12 @@
     "url": "https://github.com/retejs/connection-plugin/issues"
   },
   "peerDependencies": {
-    "rete": "^2.0.0-beta.1",
-    "rete-area-plugin": "^2.0.0-beta.1"
+    "rete": "^2.0.0-beta.8",
+    "rete-area-plugin": "^2.0.0-beta.10"
   },
   "devDependencies": {
-    "rete": "^2.0.0-beta.1",
-    "rete-area-plugin": "^2.0.0-beta.1",
+    "rete": "^2.0.0-beta.8",
+    "rete-area-plugin": "^2.0.0-beta.10",
     "rete-cli": "^1.0.0-beta.29",
     "rollup-plugin-sass": "^0.6.1",
     "ts-node": "^8.0.2",
