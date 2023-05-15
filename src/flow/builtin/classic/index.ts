@@ -16,7 +16,7 @@ class Picked<Schemes extends ClassicScheme, K extends any[]> extends State<Schem
     super()
   }
 
-  pick({ socket }: PickParams, context: Context<Schemes, K>): void {
+  async pick({ socket }: PickParams, context: Context<Schemes, K>): Promise<void> {
     if (this.params.canMakeConnection(this.initial, socket)) {
       syncConnections([this.initial, socket], context.editor).commit()
       const created = this.params.makeConnection(this.initial, socket, context)
@@ -35,23 +35,33 @@ class Picked<Schemes extends ClassicScheme, K extends any[]> extends State<Schem
 
 class PickedExisting<Schemes extends ClassicScheme, K extends any[]> extends State<Schemes, K> {
   initial!: SocketData
+  outputSocket: SocketData
 
   constructor(public connection: Schemes['Connection'], private params: ClassicParams<Schemes>, context: Context<Schemes, K>) {
     super()
     const outputSocket = Array.from(context.socketsCache.values()).find(data => {
       return data.nodeId === this.connection.source
-                && data.side === 'output'
-                && data.key === this.connection.sourceOutput
+        && data.side === 'output'
+        && data.key === this.connection.sourceOutput
     })
 
     if (!outputSocket) throw new Error('cannot find output socket')
 
-    context.scope.emit({ type: 'connectionpick', data: { socket: outputSocket } })
-    context.editor.removeConnection(this.connection.id)
-    this.initial = outputSocket
+    this.outputSocket = outputSocket
   }
 
-  pick({ socket, event }: PickParams, context: Context<Schemes, K>): void {
+  async init(context: Context<Schemes, K>) {
+    context.scope.emit({ type: 'connectionpick', data: { socket: this.outputSocket } }).then(response => {
+      if (response) {
+        context.editor.removeConnection(this.connection.id)
+        this.initial = this.outputSocket
+      } else {
+        this.drop(context)
+      }
+    })
+  }
+
+  async pick({ socket, event }: PickParams, context: Context<Schemes, K>): Promise<void> {
     if (this.initial && !(socket.side === 'input' && this.connection.target === socket.nodeId && this.connection.targetInput === socket.key)) {
       if (this.params.canMakeConnection(this.initial, socket)) {
         syncConnections([this.initial, socket], context.editor).commit()
@@ -82,7 +92,7 @@ class Idle<Schemes extends ClassicScheme, K extends any[]> extends State<Schemes
     super()
   }
 
-  pick({ socket, event }: PickParams, context: Context<Schemes, K>): void {
+  async pick({ socket, event }: PickParams, context: Context<Schemes, K>): Promise<void> {
     if (event !== 'down') return
     if (socket.side === 'input') {
       const connection = context
@@ -90,13 +100,19 @@ class Idle<Schemes extends ClassicScheme, K extends any[]> extends State<Schemes
         .find(item => item.target === socket.nodeId && item.targetInput === socket.key)
 
       if (connection) {
-        this.context.switchTo(new PickedExisting(connection, this.params, context))
+        const state = new PickedExisting(connection, this.params, context)
+
+        await state.init(context)
+        this.context.switchTo(state)
         return
       }
     }
 
-    context.scope.emit({ type: 'connectionpick', data: { socket } })
-    this.context.switchTo(new Picked(socket, this.params))
+    if (await context.scope.emit({ type: 'connectionpick', data: { socket } })) {
+      this.context.switchTo(new Picked(socket, this.params))
+    } else {
+      this.drop(context)
+    }
   }
 
   drop(context: Context<Schemes, K>, socket: SocketData | null = null, created = false): void {
@@ -117,8 +133,8 @@ export class ClassicFlow<Schemes extends ClassicScheme, K extends any[]> impleme
     this.switchTo(new Idle<Schemes, K>({ canMakeConnection, makeConnection }))
   }
 
-  public pick(params: PickParams, context: Context<Schemes, K>) {
-    this.currentState.pick(params, context)
+  public async pick(params: PickParams, context: Context<Schemes, K>) {
+    await this.currentState.pick(params, context)
   }
 
   public getPickedSocket() {

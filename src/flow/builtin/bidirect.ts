@@ -12,7 +12,7 @@ class Picked<Schemes extends ClassicScheme, K extends any[]> extends State<Schem
     super()
   }
 
-  pick({ socket }: PickParams, context: Context<Schemes, K>): void {
+  async pick({ socket }: PickParams, context: Context<Schemes, K>): Promise<void> {
     if (this.params.makeConnection(this.initial, socket, context)) {
       this.drop(context, socket, true)
     } else if (!this.params.pickByClick) {
@@ -33,10 +33,13 @@ class Idle<Schemes extends ClassicScheme, K extends any[]> extends State<Schemes
     super()
   }
 
-  pick({ socket, event }: PickParams, context: Context<Schemes, K>): void {
+  async pick({ socket, event }: PickParams, context: Context<Schemes, K>): Promise<void> {
     if (event === 'down') {
-      context.scope.emit({ type: 'connectionpick', data: { socket } })
-      this.context.switchTo(new Picked(socket, this.params))
+      if (await context.scope.emit({ type: 'connectionpick', data: { socket } })) {
+        this.context.switchTo(new Picked(socket, this.params))
+      } else {
+        this.drop(context)
+      }
     }
   }
 
@@ -58,7 +61,7 @@ export class BidirectFlow<Schemes extends ClassicScheme, K extends any[]> implem
     this.switchTo(new Idle({ pickByClick, makeConnection }))
   }
 
-  public pick(params: PickParams, context: Context<Schemes, K>) {
+  public async pick(params: PickParams, context: Context<Schemes, K>) {
     this.currentState.pick(params, context)
   }
 

@@ -1,56 +1,70 @@
 import { getUID } from 'rete'
-import { AreaPlugin } from 'rete-area-plugin'
+import { BaseAreaPlugin } from 'rete-area-plugin'
 
+import { BaseArea } from '../../area-plugin/src/base'
 import { ClassicScheme, Position, SocketData } from './types'
 
 export function createPseudoconnection<Schemes extends ClassicScheme, K>(extra?: Partial<Schemes['Connection']>) {
-  const element = document.createElement('div')
+  let element: HTMLElement | null = null
   let id: string | null = null
 
-  element.style.position = 'absolute'
-  element.style.left = '0'
-  element.style.top = '0'
+  function unmount(areaPlugin: BaseAreaPlugin<Schemes, BaseArea<Schemes> | K>) {
+    if (id) {
+      areaPlugin.removeConnectionView(id)
+    }
+    element = null
+    id = null
+  }
+  function mount(areaPlugin: BaseAreaPlugin<Schemes, BaseArea<Schemes> | K>) {
+    unmount(areaPlugin)
+    id = `pseudo_${getUID()}`
+  }
 
   return {
     isMounted() {
       return Boolean(id)
     },
-    mount(areaPlugin: AreaPlugin<Schemes, K>) {
-      id = `pseudo_${getUID()}`
-      areaPlugin.area.content.add(element)
-    },
-    render(areaPlugin: AreaPlugin<Schemes, K>, { x, y }: Position, data: SocketData) {
+    mount,
+    // eslint-disable-next-line complexity
+    render(areaPlugin: BaseAreaPlugin<Schemes, BaseArea<Schemes> | K>, { x, y }: Position, data: SocketData) {
       const isOutput = data.side === 'output'
       const pointer = { x: x + (isOutput ? -3 : 3), y } // fix hover of underlying elements
 
       if (!id) throw new Error('pseudo connection id wasn\'t generated')
 
+      const payload = isOutput ? {
+        id,
+        source: data.nodeId,
+        sourceOutput: data.key,
+        target: '',
+        targetInput: '',
+        ...(extra || {})
+      } : {
+        id,
+        target: data.nodeId,
+        targetInput: data.key,
+        source: '',
+        sourceOutput: '',
+        ...(extra || {})
+      }
+
+      if (!element) {
+        const view = areaPlugin.addConnectionView(payload)
+
+        element = view.element
+      }
+
+      if (!element) return
+
       areaPlugin.emit({
         type: 'render', data: {
           element,
           type: 'connection',
-          payload: isOutput ? {
-            id,
-            source: data.nodeId,
-            sourceOutput: data.key,
-            target: '',
-            targetInput: '',
-            ...(extra || {})
-          } : {
-            id,
-            target: data.nodeId,
-            targetInput: data.key,
-            source: '',
-            sourceOutput: '',
-            ...(extra || {})
-          },
+          payload,
           ...(isOutput ? { end: pointer } : { start: pointer })
         }
       })
     },
-    unmount(areaPlugin: AreaPlugin<Schemes, K>) {
-      id = null
-      areaPlugin.emit({ type: 'unmount', data: { element } })
-    }
+    unmount
   }
 }

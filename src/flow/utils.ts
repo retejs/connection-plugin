@@ -16,8 +16,8 @@ export abstract class State<Schemes extends ClassicScheme, K extends any[]> {
     this.context = context
   }
 
-    abstract pick(params: PickParams, context: Context<Schemes, K>): void
-    abstract drop(context: Context<Schemes, K>): void
+  abstract pick(params: PickParams, context: Context<Schemes, K>): Promise<void>
+  abstract drop(context: Context<Schemes, K>): void
 }
 
 export function getSourceTarget(initial: SocketData, socket: SocketData) {

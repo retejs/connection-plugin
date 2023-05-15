@@ -1,10 +1,10 @@
-import { NodeEditor, Root, Scope } from 'rete'
-import { Area2D, Area2DInherited, AreaPlugin, RenderSignal } from 'rete-area-plugin'
+import { NodeEditor, Scope } from 'rete'
+import { BaseArea, BaseAreaPlugin, RenderSignal } from 'rete-area-plugin'
 
 import { Flow } from './flow'
 import { EventType } from './flow/base'
 import { createPseudoconnection } from './pseudoconnection'
-import { ClassicScheme, Connection, Preset, Side, SocketData } from './types'
+import { ClassicScheme, Connection, Position, Preset, Side, SocketData } from './types'
 import { findSocket } from './utils'
 
 export * from './flow'
@@ -12,16 +12,19 @@ export * as Presets from './presets'
 export { createPseudoconnection } from './pseudoconnection'
 export type { Connection, Preset, Side, SocketData } from './types'
 
-export type ExpectArea2DExtra =
+export type ConnectionExtra =
+  | { type: 'pointermove', data: { position: Position, event: PointerEvent } }
+  | { type: 'pointerup', data: { position: Position, event: PointerEvent } }
   | RenderSignal<'socket', {
     nodeId: string,
     side: Side,
     key: string
   }>
+  | { type: 'unmount', data: { element: HTMLElement } }
 
-export class ConnectionPlugin<Schemes extends ClassicScheme, K = never> extends Scope<Connection, Area2DInherited<Schemes, ExpectArea2DExtra | K>> {
+export class ConnectionPlugin<Schemes extends ClassicScheme, K = ConnectionExtra> extends Scope<Connection, [ConnectionExtra | K]> {
   presets: Preset<Schemes>[] = []
-  private areaPlugin!: AreaPlugin<Schemes>
+  private areaPlugin!: BaseAreaPlugin<Schemes, BaseArea<Schemes>>
   private editor!: NodeEditor<Schemes>
   private currentFlow: Flow<Schemes, any[]> | null = null
   private preudoconnection = createPseudoconnection({ isPseudo: true })
@@ -54,7 +57,7 @@ export class ConnectionPlugin<Schemes extends ClassicScheme, K = never> extends 
   }
 
   // eslint-disable-next-line max-statements
-  pick(event: PointerEvent, type: EventType) {
+  async pick(event: PointerEvent, type: EventType) {
     const flowContext = { editor: this.editor, scope: this, socketsCache: this.socketsCache }
     const pointedElements = document.elementsFromPoint(event.clientX, event.clientY)
     const pickedSocket = findSocket(this.socketsCache, pointedElements)
@@ -66,7 +69,7 @@ export class ConnectionPlugin<Schemes extends ClassicScheme, K = never> extends 
       this.currentFlow = this.currentFlow || this.findPreset(pickedSocket)
 
       if (this.currentFlow) {
-        this.currentFlow.pick({ socket: pickedSocket, event: type }, flowContext)
+        await this.currentFlow.pick({ socket: pickedSocket, event: type }, flowContext)
         this.preudoconnection.mount(this.areaPlugin)
       }
     } else if (this.currentFlow) {
@@ -79,9 +82,9 @@ export class ConnectionPlugin<Schemes extends ClassicScheme, K = never> extends 
     this.update()
   }
 
-  setParent(scope: Scope<Area2D<Schemes> | ExpectArea2DExtra, [Root<Schemes>]>): void {
+  setParent(scope: Scope<ConnectionExtra | K>): void {
     super.setParent(scope)
-    this.areaPlugin = this.parentScope<AreaPlugin<Schemes>>(AreaPlugin)
+    this.areaPlugin = this.parentScope<BaseAreaPlugin<Schemes, BaseArea<Schemes>>>(BaseAreaPlugin)
     this.editor = this.areaPlugin.parentScope<NodeEditor<Schemes>>(NodeEditor)
 
     const pointerdownSocket = (e: PointerEvent) => {
@@ -97,13 +100,11 @@ export class ConnectionPlugin<Schemes extends ClassicScheme, K = never> extends 
       } else if (context.type === 'pointerup') {
         this.pick(context.data.event, 'up')
       } else if (context.type === 'render') {
-        const withExtra = context as (typeof context) | ExpectArea2DExtra // inject extra type
-
-        if (withExtra.data.type === 'socket') {
-          const { element } = withExtra.data
+        if (context.data.type === 'socket') {
+          const { element } = context.data
 
           element.addEventListener('pointerdown', pointerdownSocket)
-          this.socketsCache.set(element, withExtra.data)
+          this.socketsCache.set(element, context.data)
         }
       } else if (context.type === 'unmount') {
         const { element } = context.data
