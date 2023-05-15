@@ -10,9 +10,9 @@ import { findSocket } from './utils'
 export * from './flow'
 export * as Presets from './presets'
 export { createPseudoconnection } from './pseudoconnection'
-export type { Connection, Preset, Side, SocketData } from './types'
+export type { Connection, ConnectionExtra, Preset, Side, SocketData } from './types'
 
-export type ConnectionExtra =
+type Requires =
   | { type: 'pointermove', data: { position: Position, event: PointerEvent } }
   | { type: 'pointerup', data: { position: Position, event: PointerEvent } }
   | RenderSignal<'socket', {
@@ -22,7 +22,7 @@ export type ConnectionExtra =
   }>
   | { type: 'unmount', data: { element: HTMLElement } }
 
-export class ConnectionPlugin<Schemes extends ClassicScheme, K = ConnectionExtra> extends Scope<Connection, [ConnectionExtra | K]> {
+export class ConnectionPlugin<Schemes extends ClassicScheme, K = Requires> extends Scope<Connection, [Requires | K]> {
   presets: Preset<Schemes>[] = []
   private areaPlugin!: BaseAreaPlugin<Schemes, BaseArea<Schemes>>
   private editor!: NodeEditor<Schemes>
@@ -82,7 +82,7 @@ export class ConnectionPlugin<Schemes extends ClassicScheme, K = ConnectionExtra
     this.update()
   }
 
-  setParent(scope: Scope<ConnectionExtra | K>): void {
+  setParent(scope: Scope<Requires | K>): void {
     super.setParent(scope)
     this.areaPlugin = this.parentScope<BaseAreaPlugin<Schemes, BaseArea<Schemes>>>(BaseAreaPlugin)
     this.editor = this.areaPlugin.parentScope<NodeEditor<Schemes>>(NodeEditor)

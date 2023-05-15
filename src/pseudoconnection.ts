@@ -1,7 +1,6 @@
 import { getUID } from 'rete'
-import { BaseAreaPlugin } from 'rete-area-plugin'
+import { BaseArea, BaseAreaPlugin } from 'rete-area-plugin'
 
-import { BaseArea } from '../../area-plugin/src/base'
 import { ClassicScheme, Position, SocketData } from './types'
 
 export function createPseudoconnection<Schemes extends ClassicScheme, K>(extra?: Partial<Schemes['Connection']>) {
