@@ -56,6 +56,16 @@ export class ConnectionPlugin<Schemes extends ClassicScheme, K = Requires> exten
     }
   }
 
+  drop() {
+    const flowContext = { editor: this.editor, scope: this, socketsCache: this.socketsCache }
+
+    if (this.currentFlow) {
+      this.currentFlow.drop(flowContext)
+      this.preudoconnection.unmount(this.areaPlugin)
+      this.currentFlow = null
+    }
+  }
+
   // eslint-disable-next-line max-statements
   async pick(event: PointerEvent, type: EventType) {
     const flowContext = { editor: this.editor, scope: this, socketsCache: this.socketsCache }
