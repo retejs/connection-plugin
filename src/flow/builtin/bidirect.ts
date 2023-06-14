@@ -62,7 +62,7 @@ export class BidirectFlow<Schemes extends ClassicScheme, K extends any[]> implem
   }
 
   public async pick(params: PickParams, context: Context<Schemes, K>) {
-    this.currentState.pick(params, context)
+    await this.currentState.pick(params, context)
   }
 
   public getPickedSocket() {
