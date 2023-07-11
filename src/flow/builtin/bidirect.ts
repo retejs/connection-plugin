@@ -2,8 +2,13 @@ import { ClassicScheme, SocketData } from '../../types'
 import { Context, Flow, PickParams } from '../base'
 import { makeConnection as defaultMakeConnection, State, StateContext } from '../utils'
 
+/**
+ * Bidirect flow params
+ */
 export type BidirectParams<Schemes extends ClassicScheme> = {
+  /** If true, user can pick a pseudo-connection by clicking on socket, not only by pointerdown */
   pickByClick: boolean
+  /** Custom function to make connection */
   makeConnection: <K extends any[]>(from: SocketData, to: SocketData, context: Context<Schemes, K>) => boolean | undefined
 }
 
@@ -51,6 +56,10 @@ class Idle<Schemes extends ClassicScheme, K extends any[]> extends State<Schemes
   }
 }
 
+/**
+ * Bidirect flow. User can pick a socket and connect it by releasing mouse button.
+ * More simple than classic flow, but less functional (can't remove connection by clicking on input socket).
+ */
 export class BidirectFlow<Schemes extends ClassicScheme, K extends any[]> implements StateContext<Schemes, K>, Flow<Schemes, K> {
   currentState!: State<Schemes, K>
 

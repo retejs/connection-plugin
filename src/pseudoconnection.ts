@@ -3,6 +3,11 @@ import { BaseArea, BaseAreaPlugin } from 'rete-area-plugin'
 
 import { ClassicScheme, Position, SocketData } from './types'
 
+/**
+ * Create pseudoconnection. Used to trigger rendering of connection that is being created by user.
+ * Has additional `isPseudo` property in payload.
+ * @param extra Extra payload to add to connection
+ */
 export function createPseudoconnection<Schemes extends ClassicScheme, K>(extra?: Partial<Schemes['Connection']>) {
   let element: HTMLElement | null = null
   let id: string | null = null

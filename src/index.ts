@@ -22,6 +22,16 @@ type Requires =
   }>
   | { type: 'unmount', data: { element: HTMLElement } }
 
+/**
+ * Connection plugin. Responsible for user interaction with connections (creation, deletion)
+ * @priority 9
+ * @emits connectionpick
+ * @emits connectiondrop
+ * @listens pointermove
+ * @listens pointerup
+ * @listens render
+ * @listens unmount
+ */
 export class ConnectionPlugin<Schemes extends ClassicScheme, K = Requires> extends Scope<Connection, [Requires | K]> {
   presets: Preset<Schemes>[] = []
   private areaPlugin!: BaseAreaPlugin<Schemes, BaseArea<Schemes>>
@@ -34,6 +44,10 @@ export class ConnectionPlugin<Schemes extends ClassicScheme, K = Requires> exten
     super('connection')
   }
 
+  /**
+   * Add preset to the plugin
+   * @param preset Preset to add
+   */
   public addPreset(preset: Preset<Schemes>) {
     this.presets.push(preset)
   }
@@ -56,6 +70,10 @@ export class ConnectionPlugin<Schemes extends ClassicScheme, K = Requires> exten
     }
   }
 
+  /**
+   * Drop pseudo-connection if exists
+   * @emits connectiondrop
+   */
   drop() {
     const flowContext = { editor: this.editor, scope: this, socketsCache: this.socketsCache }
 

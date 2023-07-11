@@ -6,8 +6,13 @@ import {
 } from '../../utils'
 import { syncConnections } from './sync-connections'
 
+/**
+ * Classic flow params
+ */
 export type ClassicParams<Schemes extends ClassicScheme> = {
+  /** Custom function to check if connection can be made */
   canMakeConnection: (from: SocketData, to: SocketData) => boolean | undefined
+  /** Custom function to make connection */
   makeConnection: <K extends any[]>(from: SocketData, to: SocketData, context: Context<Schemes, K>) => boolean | undefined
 }
 
@@ -123,6 +128,10 @@ class Idle<Schemes extends ClassicScheme, K extends any[]> extends State<Schemes
   }
 }
 
+/**
+ * Classic flow. User can pick/click a socket and connect it by releasing/clicking on another socket.
+ * If connection already exists and user clicks on input socket, connection will be removed.
+ */
 export class ClassicFlow<Schemes extends ClassicScheme, K extends any[]> implements StateContext<Schemes, K>, Flow<Schemes, K> {
   currentState!: State<Schemes, K>
 
