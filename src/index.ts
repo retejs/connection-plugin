@@ -90,10 +90,9 @@ export class ConnectionPlugin<Schemes extends ClassicScheme, K = Requires> exten
     const pointedElements = document.elementsFromPoint(event.clientX, event.clientY)
     const pickedSocket = findSocket(this.socketsCache, pointedElements)
 
-    event.preventDefault()
-    event.stopPropagation()
-
     if (pickedSocket) {
+      event.preventDefault()
+      event.stopPropagation()
       this.currentFlow = this.currentFlow || this.findPreset(pickedSocket)
 
       if (this.currentFlow) {
