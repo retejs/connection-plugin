@@ -5,7 +5,7 @@ import { Flow } from './flow'
 import { EventType } from './flow/base'
 import { createPseudoconnection } from './pseudoconnection'
 import { ClassicScheme, Connection, Position, Preset, Side, SocketData } from './types'
-import { findSocket } from './utils'
+import { elementsFromPoint, findSocket } from './utils'
 
 export * from './flow'
 export * as Presets from './presets'
@@ -87,7 +87,7 @@ export class ConnectionPlugin<Schemes extends ClassicScheme, K = Requires> exten
   // eslint-disable-next-line max-statements
   async pick(event: PointerEvent, type: EventType) {
     const flowContext = { editor: this.editor, scope: this, socketsCache: this.socketsCache }
-    const pointedElements = document.elementsFromPoint(event.clientX, event.clientY)
+    const pointedElements = elementsFromPoint(event.clientX, event.clientY)
     const pickedSocket = findSocket(this.socketsCache, pointedElements)
 
     if (pickedSocket) {
