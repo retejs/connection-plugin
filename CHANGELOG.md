@@ -1,3 +1,10 @@
+## [2.0.4](https://github.com/retejs/connection-plugin/compare/v2.0.3...v2.0.4) (2024-08-13)
+
+
+### Bug Fixes
+
+* infinite recursion when shadow root is empty ([142cc5a](https://github.com/retejs/connection-plugin/commit/142cc5aedf43300dcb78bb625c0272db4975fd6f))
+
 ## [2.0.3](https://github.com/retejs/connection-plugin/compare/v2.0.2...v2.0.3) (2024-08-03)
 
 
