@@ -20,9 +20,10 @@ export function findSocket(socketsCache: WeakMap<Element, SocketData>, elements:
  */
 export function elementsFromPoint(x: number, y: number, root: ShadowRoot | Document = document) {
   const elements = root.elementsFromPoint(x, y)
+  const shadowRoot = elements[0]?.shadowRoot
 
-  if (elements[0]?.shadowRoot) {
-    elements.unshift(...elementsFromPoint(x, y, elements[0].shadowRoot))
+  if (shadowRoot && shadowRoot !== root) {
+    elements.unshift(...elementsFromPoint(x, y, shadowRoot))
   }
 
   return elements
