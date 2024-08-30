@@ -1,7 +1,4 @@
 {
-    "compilerOptions": {
-        "strict": true,
-        "skipLibCheck": true
-    },
+    "extends": "rete-cli/configs/tsconfig.json",
     "include": ["src"]
 }
