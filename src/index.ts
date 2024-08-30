@@ -16,8 +16,8 @@ type Requires =
   | { type: 'pointermove', data: { position: Position, event: PointerEvent } }
   | { type: 'pointerup', data: { position: Position, event: PointerEvent } }
   | RenderSignal<'socket', {
-    nodeId: string,
-    side: Side,
+    nodeId: string
+    side: Side
     key: string
   }>
   | { type: 'unmount', data: { element: HTMLElement } }
@@ -115,17 +115,16 @@ export class ConnectionPlugin<Schemes extends ClassicScheme, K = Requires> exten
     this.editor = this.areaPlugin.parentScope<NodeEditor<Schemes>>(NodeEditor)
 
     const pointerdownSocket = (e: PointerEvent) => {
-      this.pick(e, 'down')
+      void this.pick(e, 'down')
     }
 
-    // eslint-disable-next-line max-statements
     this.addPipe(context => {
       if (!context || typeof context !== 'object' || !('type' in context)) return context
 
       if (context.type === 'pointermove') {
         this.update()
       } else if (context.type === 'pointerup') {
-        this.pick(context.data.event, 'up')
+        void this.pick(context.data.event, 'up')
       } else if (context.type === 'render') {
         if (context.data.type === 'socket') {
           const { element } = context.data

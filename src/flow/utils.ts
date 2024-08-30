@@ -25,7 +25,9 @@ export function getSourceTarget(initial: SocketData, socket: SocketData) {
   const backward = initial.side === 'input' && socket.side === 'output'
   const [source, target] = forward
     ? [initial, socket]
-    : (backward ? [socket, initial] : [])
+    : backward
+      ? [socket, initial]
+      : []
 
   if (source && target) return [source, target]
 }
@@ -38,7 +40,7 @@ export function makeConnection<Schemes extends ClassicScheme, K extends any[]>(i
   const [source, target] = getSourceTarget(initial, socket) || [null, null]
 
   if (source && target) {
-    context.editor.addConnection({
+    void context.editor.addConnection({
       id: getUID(),
       source: source.nodeId,
       sourceOutput: source.key,

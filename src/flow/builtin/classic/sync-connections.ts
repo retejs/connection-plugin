@@ -7,7 +7,9 @@ function findPort<Schemes extends ClassicScheme>(socket: SocketData, editor: Nod
 
   if (!node) throw new Error('cannot find node')
 
-  const list = socket.side === 'input' ? node.inputs : node.outputs
+  const list = socket.side === 'input'
+    ? node.inputs
+    : node.outputs
 
   return list[socket.key]
 }
@@ -41,7 +43,7 @@ export function syncConnections<Schemes extends ClassicScheme>(sockets: SocketDa
     commit() {
       const uniqueIds = Array.from(new Set(connections.map(({ id }) => id)))
 
-      uniqueIds.forEach(id => editor.removeConnection(id))
+      uniqueIds.forEach(id => void editor.removeConnection(id))
     }
   }
 }

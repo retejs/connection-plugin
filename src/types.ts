@@ -5,11 +5,11 @@ import { Flow } from './flow'
 export type Position = { x: number, y: number }
 export type Side = 'input' | 'output'
 export type SocketData = {
-  element: HTMLElement,
-  type: 'socket',
-  nodeId: string,
-  side: Side,
-  key: string,
+  element: HTMLElement
+  type: 'socket'
+  nodeId: string
+  side: Side
+  key: string
   // wrongField: true
 }
 
