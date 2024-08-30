@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/require-await */
 
 import { ClassicScheme, SocketData } from '../../../types'
 import { Context, Flow, PickParams } from '../../base'
@@ -26,13 +27,15 @@ class Picked<Schemes extends ClassicScheme, K extends any[]> extends State<Schem
       syncConnections([this.initial, socket], context.editor).commit()
       const created = this.params.makeConnection(this.initial, socket, context)
 
-      this.drop(context, created ? socket : null, created)
+      this.drop(context, created
+        ? socket
+        : null, created)
     }
   }
 
   drop(context: Context<Schemes, K>, socket: SocketData | null = null, created = false): void {
     if (this.initial) {
-      context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial, socket, created } })
+      void context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial, socket, created } })
     }
     this.context.switchTo(new Idle(this.params))
   }
@@ -56,9 +59,9 @@ class PickedExisting<Schemes extends ClassicScheme, K extends any[]> extends Sta
   }
 
   async init(context: Context<Schemes, K>) {
-    context.scope.emit({ type: 'connectionpick', data: { socket: this.outputSocket } }).then(response => {
+    void context.scope.emit({ type: 'connectionpick', data: { socket: this.outputSocket } }).then(response => {
       if (response) {
-        context.editor.removeConnection(this.connection.id)
+        void context.editor.removeConnection(this.connection.id)
         this.initial = this.outputSocket
       } else {
         this.drop(context)
@@ -71,22 +74,28 @@ class PickedExisting<Schemes extends ClassicScheme, K extends any[]> extends Sta
       if (this.params.canMakeConnection(this.initial, socket)) {
         syncConnections([this.initial, socket], context.editor).commit()
         const created = this.params.makeConnection(this.initial, socket, context)
+        const droppedSocket = created
+          ? socket
+          : null
 
-        this.drop(context, created ? socket : null, created)
+        this.drop(context, droppedSocket, created)
       }
     } else if (event === 'down') {
       if (this.initial) {
         syncConnections([this.initial, socket], context.editor).commit()
         const created = this.params.makeConnection(this.initial, socket, context)
+        const droppedSocket = created
+          ? null
+          : socket
 
-        this.drop(context, created ? socket : null, created)
+        this.drop(context, droppedSocket, created)
       }
     }
   }
 
   drop(context: Context<Schemes, K>, socket: SocketData | null = null, created = false): void {
     if (this.initial) {
-      context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial, socket, created } })
+      void context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial, socket, created } })
     }
     this.context.switchTo(new Idle<Schemes, K>(this.params))
   }
@@ -122,7 +131,7 @@ class Idle<Schemes extends ClassicScheme, K extends any[]> extends State<Schemes
 
   drop(context: Context<Schemes, K>, socket: SocketData | null = null, created = false): void {
     if (this.initial) {
-      context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial, socket, created } })
+      void context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial, socket, created } })
     }
     delete this.initial
   }

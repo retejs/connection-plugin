@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/require-await */
 import { ClassicScheme, SocketData } from '../../types'
 import { Context, Flow, PickParams } from '../base'
 import { makeConnection as defaultMakeConnection, State, StateContext } from '../utils'
@@ -27,7 +28,7 @@ class Picked<Schemes extends ClassicScheme, K extends any[]> extends State<Schem
 
   drop(context: Context<ClassicScheme, K>, socket: SocketData | null = null, created = false): void {
     if (this.initial) {
-      context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial, socket, created } })
+      void context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial, socket, created } })
     }
     this.context.switchTo(new Idle<Schemes, K>(this.params))
   }
@@ -50,7 +51,7 @@ class Idle<Schemes extends ClassicScheme, K extends any[]> extends State<Schemes
 
   drop(context: Context<Schemes, K>, socket: SocketData | null = null, created = false): void {
     if (this.initial) {
-      context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial, socket, created } })
+      void context.scope.emit({ type: 'connectiondrop', data: { initial: this.initial, socket, created } })
     }
     delete this.initial
   }
