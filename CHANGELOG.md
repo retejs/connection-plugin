@@ -1,3 +1,11 @@
+## [2.0.5](https://github.com/retejs/connection-plugin/compare/v2.0.4...v2.0.5) (2024-08-30)
+
+
+### Bug Fixes
+
+* tsconfig ([fad39dc](https://github.com/retejs/connection-plugin/commit/fad39dc03095f23fa5dfc9c4f4dddca2f7349da0))
+* update cli and fix linting errors ([c3854ad](https://github.com/retejs/connection-plugin/commit/c3854ad549249ae42fa4946087d114714c4864a2))
+
 ## [2.0.4](https://github.com/retejs/connection-plugin/compare/v2.0.3...v2.0.4) (2024-08-13)
 
 
